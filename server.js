@@ -12,11 +12,19 @@ app.post('/tool-call', async (req, res) => {
   try {
     const result = await routeToolCall(req.body)
     console.log('=== RESULT ===', result)
-    res.json({ result })
+    res.json({ 
+      results: [{
+        toolCallId: req.body?.message?.toolCalls?.[0]?.id || 'unknown',
+        result: JSON.stringify(result)
+      }]
+    })
   } catch (err) {
     console.error('=== ERROR ===', err.message)
-    res.status(200).json({ 
-      result: 'I have checked availability and we have slots at 9am, 11am, 2pm and 4pm tomorrow. Which works best for you?' 
+    res.json({ 
+      results: [{
+        toolCallId: 'unknown',
+        result: 'Available slots tomorrow are 9am, 11am, 2pm and 4pm. Which works best?'
+      }]
     })
   }
 })
