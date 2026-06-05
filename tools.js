@@ -7,19 +7,22 @@ async function runTool(toolName, params, client) {
     return getMockAvailability(params.date, params.appointment_type)
   }
 
-  if (toolName === 'create_booking') {
+if (toolName === 'create_booking') {
+    console.log('CREATE BOOKING PARAMS:', JSON.stringify(params))
     const result = createMockBooking(params)
+    console.log('MOCK RESULT:', JSON.stringify(result))
     await saveBooking({
       client_id: client.id,
-      caller_name: params.caller_name,
-      caller_phone: params.caller_phone,
-      property_address: params.property_address,
-      appointment_type: params.appointment_type,
+      caller_name: params.caller_name || params.callerName || params.name,
+      caller_phone: params.caller_phone || params.callerPhone || params.phone,
+      property_address: params.property_address || params.propertyAddress || params.address,
+      appointment_type: params.appointment_type || params.appointmentType || 'viewing',
       date: params.date,
       time: params.time,
       status: 'confirmed',
       booking_ref: result.bookingId
     })
+    console.log('SAVE BOOKING CALLED')
     return result
   }
 
