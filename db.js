@@ -1,3 +1,5 @@
+const { createClient } = require('@supabase/supabase-js')
+
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_ANON_KEY,
@@ -38,7 +40,6 @@ async function logCall(entry) {
 async function saveBooking(booking) {
   console.log('Attempting to save booking:', JSON.stringify(booking))
   
-  // Remove client_id if null to avoid foreign key error
   if (!booking.client_id) {
     delete booking.client_id
   }
