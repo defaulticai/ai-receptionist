@@ -35,11 +35,17 @@ async function logCall(entry) {
 }
 
 async function saveBooking(booking) {
-  const { error } = await supabase
+  console.log('Attempting to save booking:', JSON.stringify(booking))
+  const { data, error } = await supabase
     .from('bookings')
     .insert(booking)
+    .select()
 
-  if (error) console.error('Booking save error:', error.message)
+  if (error) {
+    console.error('Booking save error:', JSON.stringify(error))
+  } else {
+    console.log('Booking saved successfully:', JSON.stringify(data))
+  }
 }
 
 module.exports = { getClientByAssistantId, logCall, saveBooking }
