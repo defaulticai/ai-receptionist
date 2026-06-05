@@ -1,6 +1,6 @@
-const { logCall, saveBooking } = require('./db') 
- 
- async function runTool(toolName, params, client) {
+const { saveBooking } = require('./db')
+
+async function runTool(toolName, params, client) {
   console.log('Running tool:', toolName, 'for client:', client.business_name)
 
   if (toolName === 'get_availability') {
@@ -8,7 +8,7 @@ const { logCall, saveBooking } = require('./db')
   }
 
   if (toolName === 'create_booking') {
-    result = createMockBooking(params)
+    const result = createMockBooking(params)
     await saveBooking({
       client_id: client.id,
       caller_name: params.caller_name,
@@ -20,6 +20,7 @@ const { logCall, saveBooking } = require('./db')
       status: 'confirmed',
       booking_ref: result.bookingId
     })
+    return result
   }
 
   if (toolName === 'cancel_booking') {
