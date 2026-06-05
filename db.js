@@ -36,6 +36,12 @@ async function logCall(entry) {
 
 async function saveBooking(booking) {
   console.log('Attempting to save booking:', JSON.stringify(booking))
+  
+  // Remove client_id if null to avoid foreign key error
+  if (!booking.client_id) {
+    delete booking.client_id
+  }
+
   const { data, error } = await supabase
     .from('bookings')
     .insert(booking)
