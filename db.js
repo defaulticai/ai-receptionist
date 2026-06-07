@@ -56,18 +56,20 @@ async function saveBooking(booking) {
   }
 }
 
-async function getBookingByDetails(callerName, propertyAddress, callerPhone) {
-  // Try phone number first (more reliable than name)
+async function getBookingByDetails(callerName, propertyAddress, callerPhone, date) {
+  // Try phone number + date first (most reliable)
   if (callerPhone) {
-    const { data, error } = await supabase
+    let query = supabase
       .from('bookings')
       .select('*')
       .eq('caller_phone', callerPhone)
       .eq('status', 'confirmed')
       .order('created_at', { ascending: false })
       .limit(1)
-      .single()
 
+    if (date) query = query.eq('date', date)
+
+    const { data, error } = await query.single()
     if (!error && data) return data
   }
 

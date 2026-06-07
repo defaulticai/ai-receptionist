@@ -51,12 +51,12 @@ async function runTool(toolName, params, client) {
   if (toolName === 'cancel_booking') {
     console.log('CANCEL BOOKING PARAMS:', JSON.stringify(params))
 
-    const booking = await getBookingByDetails(
+const booking = await getBookingByDetails(
   params.caller_name,
   params.property_address,
-  params.caller_phone
+  params.caller_phone,
+  params.date
 )
-
     if (!booking) {
       return {
         success: false,
