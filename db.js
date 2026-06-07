@@ -56,7 +56,22 @@ async function saveBooking(booking) {
   }
 }
 
-async function getBookingByDetails(callerName, propertyAddress) {
+async function getBookingByDetails(callerName, propertyAddress, callerPhone) {
+  // Try phone number first (more reliable than name)
+  if (callerPhone) {
+    const { data, error } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('caller_phone', callerPhone)
+      .eq('status', 'confirmed')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single()
+
+    if (!error && data) return data
+  }
+
+  // Fall back to name + address
   const { data, error } = await supabase
     .from('bookings')
     .select('*')
@@ -67,10 +82,7 @@ async function getBookingByDetails(callerName, propertyAddress) {
     .limit(1)
     .single()
 
-  if (error) {
-    console.error('Get booking error:', error.message)
-    return null
-  }
+  if (error) return null
   return data
 }
 
