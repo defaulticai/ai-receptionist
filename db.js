@@ -18,12 +18,17 @@ async function getClientByAssistantId(assistantId) {
   if (error) {
     console.log('Client not found, using default mock client')
     return {
-      id: null,
-      business_name: 'Prestige Property',
-      assistant_id: assistantId,
-      booking_system: 'mock',
-      api_key: null
-    }
+  id: null,
+  business_name: 'Prestige Property',
+  assistant_id: assistantId,
+  booking_system: 'mock',
+  api_key: null,
+  business_email: 'imadudxn@email.com',
+  collect_email: true,
+  collect_phone: true,
+  send_email_confirmation: true,
+  send_sms_confirmation: false
+}
   }
 
   return data

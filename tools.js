@@ -1,5 +1,6 @@
 const { saveBooking, getBookingByDetails, updateBookingStatus, rescheduleBooking, logCall } = require('./db')
 const { createCalendarEvent, deleteCalendarEvent } = require('./calendar')
+const { sendBookingConfirmation, sendCancellationConfirmation, sendRescheduleConfirmation } = require('./email')
 
 async function runTool(toolName, params, client) {
   console.log('Running tool:', toolName, 'for client:', client.business_name)
@@ -35,6 +36,7 @@ async function runTool(toolName, params, client) {
       client_id: client.id,
       caller_name: params.caller_name || params.callerName || params.name,
       caller_phone: params.caller_phone || params.callerPhone || params.phone,
+      caller_email: params.caller_email || null,
       property_address: params.property_address || params.propertyAddress || params.address,
       appointment_type: params.appointment_type || params.appointmentType || 'viewing',
       date: params.date,
@@ -51,6 +53,38 @@ async function runTool(toolName, params, client) {
       action: 'booked',
       notes: `Viewing booked at ${params.property_address} on ${params.date} at ${params.time}`
     }).catch(err => console.error('Log error:', err.message))
+
+    // Email to caller
+    if (client.send_email_confirmation && params.caller_email) {
+      try {
+        await sendBookingConfirmation({
+          callerName: params.caller_name,
+          callerEmail: params.caller_email,
+          propertyAddress: params.property_address,
+          date: params.date,
+          time: params.time,
+          businessName: client.business_name
+        })
+      } catch (err) {
+        console.error('Email error:', err.message)
+      }
+    }
+
+    // Email to business owner
+    if (client.business_email) {
+      try {
+        await sendBookingConfirmation({
+          callerName: client.business_name,
+          callerEmail: client.business_email,
+          propertyAddress: params.property_address,
+          date: params.date,
+          time: params.time,
+          businessName: `New booking from ${params.caller_name} (${params.caller_phone})`
+        })
+      } catch (err) {
+        console.error('Email error:', err.message)
+      }
+    }
 
     return result
   }
@@ -100,6 +134,38 @@ async function runTool(toolName, params, client) {
       booking_id: booking.id
     }).catch(err => console.error('Log error:', err.message))
 
+    // Email to caller
+    if (client.send_email_confirmation && params.caller_email) {
+      try {
+        await sendCancellationConfirmation({
+          callerName: booking.caller_name,
+          callerEmail: params.caller_email,
+          propertyAddress: booking.property_address,
+          date: booking.date,
+          time: booking.time,
+          businessName: client.business_name
+        })
+      } catch (err) {
+        console.error('Email error:', err.message)
+      }
+    }
+
+    // Email to business owner
+    if (client.business_email) {
+      try {
+        await sendCancellationConfirmation({
+          callerName: client.business_name,
+          callerEmail: client.business_email,
+          propertyAddress: booking.property_address,
+          date: booking.date,
+          time: booking.time,
+          businessName: `Cancelled by ${booking.caller_name} (${booking.caller_phone})`
+        })
+      } catch (err) {
+        console.error('Email error:', err.message)
+      }
+    }
+
     return {
       success: true,
       message: `Cancelled. ${booking.caller_name}'s viewing at ${booking.property_address} on ${booking.date} at ${booking.time} has been cancelled.`
@@ -136,13 +202,11 @@ async function runTool(toolName, params, client) {
       refresh_token: process.env.GOOGLE_REFRESH_TOKEN
     }
 
-    // Delete old calendar event
     if (booking.calendar_event_id) {
       deleteCalendarEvent(tokens, booking.calendar_event_id)
         .catch(err => console.error('Calendar delete error:', err.message))
     }
 
-    // Create new calendar event
     let newCalendarEventId = null
     try {
       const calendarEvent = await createCalendarEvent(tokens, {
@@ -167,6 +231,42 @@ async function runTool(toolName, params, client) {
       notes: `Viewing at ${booking.property_address} moved from ${booking.date} at ${booking.time} to ${params.new_date} at ${params.new_time}`,
       booking_id: booking.id
     }).catch(err => console.error('Log error:', err.message))
+
+    // Email to caller
+    if (client.send_email_confirmation && params.caller_email) {
+      try {
+        await sendRescheduleConfirmation({
+          callerName: booking.caller_name,
+          callerEmail: params.caller_email,
+          propertyAddress: booking.property_address,
+          oldDate: booking.date,
+          oldTime: booking.time,
+          newDate: params.new_date,
+          newTime: params.new_time,
+          businessName: client.business_name
+        })
+      } catch (err) {
+        console.error('Email error:', err.message)
+      }
+    }
+
+    // Email to business owner
+    if (client.business_email) {
+      try {
+        await sendRescheduleConfirmation({
+          callerName: client.business_name,
+          callerEmail: client.business_email,
+          propertyAddress: booking.property_address,
+          oldDate: booking.date,
+          oldTime: booking.time,
+          newDate: params.new_date,
+          newTime: params.new_time,
+          businessName: `Rescheduled by ${booking.caller_name} (${booking.caller_phone})`
+        })
+      } catch (err) {
+        console.error('Email error:', err.message)
+      }
+    }
 
     return {
       success: true,
