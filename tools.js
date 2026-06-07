@@ -37,6 +37,7 @@ async function runTool(toolName, params, client) {
       const calendarEvent = await createCalendarEvent(tokens, {
         caller_name: params.caller_name,
         caller_phone: params.caller_phone,
+        caller_email: params.caller_email,
         property_address: params.property_address,
         date: params.date,
         time: params.time
