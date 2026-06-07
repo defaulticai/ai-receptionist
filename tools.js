@@ -13,7 +13,13 @@ async function runTool(toolName, params, client) {
     const result = createMockBooking(params)
     console.log('MOCK RESULT:', JSON.stringify(result))
 
-    await saveBooking({
+    const tokens = {
+      access_token: process.env.GOOGLE_ACCESS_TOKEN,
+      refresh_token: process.env.GOOGLE_REFRESH_TOKEN
+    }
+
+    // Non-blocking — runs in background, doesn't slow down response
+    saveBooking({
       client_id: client.id,
       caller_name: params.caller_name || params.callerName || params.name,
       caller_phone: params.caller_phone || params.callerPhone || params.phone,
@@ -23,22 +29,17 @@ async function runTool(toolName, params, client) {
       time: params.time,
       status: 'confirmed',
       booking_ref: result.bookingId
-    })
+    }).catch(err => console.error('Save error:', err.message))
 
-    const tokens = {
-      access_token: process.env.GOOGLE_ACCESS_TOKEN,
-      refresh_token: process.env.GOOGLE_REFRESH_TOKEN
-    }
-
-    await createCalendarEvent(tokens, {
+    createCalendarEvent(tokens, {
       caller_name: params.caller_name,
       caller_phone: params.caller_phone,
       property_address: params.property_address,
       date: params.date,
       time: params.time
-    })
+    }).catch(err => console.error('Calendar error:', err.message))
 
-    console.log('SAVE BOOKING CALLED')
+    // Return immediately without waiting
     return result
   }
 
