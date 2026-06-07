@@ -1,4 +1,4 @@
-const { saveBooking } = require('./db')
+const { saveBooking, getBookingByDetails, updateBookingStatus } = require('./db')
 const { createCalendarEvent } = require('./calendar')
 
 async function runTool(toolName, params, client) {
@@ -18,7 +18,6 @@ async function runTool(toolName, params, client) {
       refresh_token: process.env.GOOGLE_REFRESH_TOKEN
     }
 
-    // Non-blocking — runs in background, doesn't slow down response
     saveBooking({
       client_id: client.id,
       caller_name: params.caller_name || params.callerName || params.name,
@@ -39,12 +38,30 @@ async function runTool(toolName, params, client) {
       time: params.time
     }).catch(err => console.error('Calendar error:', err.message))
 
-    // Return immediately without waiting
     return result
   }
 
   if (toolName === 'cancel_booking') {
-    return cancelMockBooking(params)
+    console.log('CANCEL BOOKING PARAMS:', JSON.stringify(params))
+
+    const booking = await getBookingByDetails(
+      params.caller_name,
+      params.property_address
+    )
+
+    if (!booking) {
+      return {
+        success: false,
+        message: 'I could not find a booking matching those details. Could you double check the name and property address?'
+      }
+    }
+
+    await updateBookingStatus(booking.id, 'cancelled')
+
+    return {
+      success: true,
+      message: `Your viewing at ${booking.property_address} on ${booking.date} at ${booking.time} has been cancelled.`
+    }
   }
 
   if (toolName === 'reschedule_booking') {
@@ -68,13 +85,6 @@ function createMockBooking(params) {
     success: true,
     bookingId: 'MOCK-' + Math.floor(Math.random() * 10000),
     message: `Booking confirmed for ${params.caller_name} on ${params.date} at ${params.time}`
-  }
-}
-
-function cancelMockBooking(params) {
-  return {
-    success: true,
-    message: `Booking cancelled for ${params.caller_name}`
   }
 }
 

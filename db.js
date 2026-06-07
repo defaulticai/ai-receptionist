@@ -56,4 +56,31 @@ async function saveBooking(booking) {
   }
 }
 
-module.exports = { getClientByAssistantId, logCall, saveBooking }
+async function getBookingByDetails(callerName, propertyAddress) {
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('*')
+    .ilike('caller_name', `%${callerName}%`)
+    .ilike('property_address', `%${propertyAddress}%`)
+    .eq('status', 'confirmed')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single()
+
+  if (error) {
+    console.error('Get booking error:', error.message)
+    return null
+  }
+  return data
+}
+
+async function updateBookingStatus(bookingId, status) {
+  const { error } = await supabase
+    .from('bookings')
+    .update({ status })
+    .eq('id', bookingId)
+
+  if (error) console.error('Update booking error:', error.message)
+}
+
+module.exports = { getClientByAssistantId, logCall, saveBooking, getBookingByDetails, updateBookingStatus }
