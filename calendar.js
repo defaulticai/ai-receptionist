@@ -61,4 +61,4 @@ function convertTo24Hour(time12h) {
   return `${String(hours).padStart(2, '0')}:${minutes}`
 }
 
-module.exports = { getAuthUrl, createCalendarEvent }
+module.exports = { getAuthUrl, createCalendarEvent, getOAuthClient }
