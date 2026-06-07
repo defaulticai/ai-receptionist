@@ -1,4 +1,5 @@
 const { saveBooking } = require('./db')
+const { createCalendarEvent } = require('./calendar')
 
 async function runTool(toolName, params, client) {
   console.log('Running tool:', toolName, 'for client:', client.business_name)
@@ -7,10 +8,11 @@ async function runTool(toolName, params, client) {
     return getMockAvailability(params.date, params.appointment_type)
   }
 
-if (toolName === 'create_booking') {
+  if (toolName === 'create_booking') {
     console.log('CREATE BOOKING PARAMS:', JSON.stringify(params))
     const result = createMockBooking(params)
     console.log('MOCK RESULT:', JSON.stringify(result))
+
     await saveBooking({
       client_id: client.id,
       caller_name: params.caller_name || params.callerName || params.name,
@@ -22,6 +24,20 @@ if (toolName === 'create_booking') {
       status: 'confirmed',
       booking_ref: result.bookingId
     })
+
+    const tokens = {
+      access_token: process.env.GOOGLE_ACCESS_TOKEN,
+      refresh_token: process.env.GOOGLE_REFRESH_TOKEN
+    }
+
+    await createCalendarEvent(tokens, {
+      caller_name: params.caller_name,
+      caller_phone: params.caller_phone,
+      property_address: params.property_address,
+      date: params.date,
+      time: params.time
+    })
+
     console.log('SAVE BOOKING CALLED')
     return result
   }
