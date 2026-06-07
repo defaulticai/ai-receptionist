@@ -6,7 +6,21 @@ async function runTool(toolName, params, client) {
   console.log('Running tool:', toolName, 'for client:', client.business_name)
 
   if (toolName === 'get_availability') {
-    return getMockAvailability(params.date, params.appointment_type)
+    const tokens = {
+      access_token: process.env.GOOGLE_ACCESS_TOKEN,
+      refresh_token: process.env.GOOGLE_REFRESH_TOKEN
+    }
+    try {
+      return await getAvailabilityFromCalendar(params.date, tokens)
+    } catch (err) {
+      console.error('Calendar availability error:', err.message)
+      return {
+        available: true,
+        slots: ['9:00am', '11:00am', '2:00pm', '4:00pm'],
+        date: params.date,
+        type: params.appointment_type
+      }
+    }
   }
 
   if (toolName === 'create_booking') {
@@ -277,12 +291,43 @@ async function runTool(toolName, params, client) {
   throw new Error('Unknown tool: ' + toolName)
 }
 
-function getMockAvailability(date, type) {
+async function getAvailabilityFromCalendar(date, tokens) {
+  const { google } = require('googleapis')
+  const { getOAuthClient } = require('./calendar')
+  
+  const oauth2Client = getOAuthClient()
+  oauth2Client.setCredentials(tokens)
+  
+  const calendar = google.calendar({ version: 'v3', auth: oauth2Client })
+  
+  // Get all events on this date
+  const startOfDay = new Date(`${date}T00:00:00Z`)
+  const endOfDay = new Date(`${date}T23:59:59Z`)
+  
+  const response = await calendar.events.list({
+    calendarId: 'primary',
+    timeMin: startOfDay.toISOString(),
+    timeMax: endOfDay.toISOString(),
+    singleEvents: true
+  })
+  
+  const bookedTimes = response.data.items.map(event => {
+    const start = new Date(event.start.dateTime || event.start.date)
+    const hours = start.getHours()
+    const minutes = start.getMinutes()
+    const period = hours >= 12 ? 'pm' : 'am'
+    const displayHours = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours
+    return `${displayHours}:${minutes.toString().padStart(2, '0')}${period}`
+  })
+  
+  const allSlots = ['9:00am', '11:00am', '2:00pm', '4:00pm']
+  const available = allSlots.filter(slot => !bookedTimes.includes(slot))
+  
   return {
-    available: true,
-    slots: ['9:00am', '11:00am', '2:00pm', '4:00pm'],
+    available: available.length > 0,
+    slots: available,
     date: date,
-    type: type
+    type: 'viewing'
   }
 }
 
