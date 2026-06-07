@@ -24,7 +24,7 @@ async function createCalendarEvent(tokens, booking) {
   const calendar = google.calendar({ version: 'v3', auth: oauth2Client })
 
   const startDateTime = new Date(`${booking.date}T${convertTo24Hour(booking.time)}:00`)
-  const endDateTime = new Date(startDateTime.getTime() + 60 * 60 * 1000) // 1 hour
+  const endDateTime = new Date(startDateTime.getTime() + 60 * 60 * 1000)
 
   const event = {
     summary: `Property Viewing — ${booking.property_address}`,
@@ -48,6 +48,20 @@ async function createCalendarEvent(tokens, booking) {
   return response.data
 }
 
+async function deleteCalendarEvent(tokens, eventId) {
+  const oauth2Client = getOAuthClient()
+  oauth2Client.setCredentials(tokens)
+
+  const calendar = google.calendar({ version: 'v3', auth: oauth2Client })
+
+  await calendar.events.delete({
+    calendarId: 'primary',
+    eventId: eventId
+  })
+
+  console.log('Calendar event deleted:', eventId)
+}
+
 function convertTo24Hour(time12h) {
   const [time, modifier] = time12h.split(/(?=[ap]m)/i)
   let [hours, minutes] = time.split(':')
@@ -61,4 +75,4 @@ function convertTo24Hour(time12h) {
   return `${String(hours).padStart(2, '0')}:${minutes}`
 }
 
-module.exports = { getAuthUrl, createCalendarEvent, getOAuthClient }
+module.exports = { getAuthUrl, createCalendarEvent, deleteCalendarEvent, getOAuthClient }

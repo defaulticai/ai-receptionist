@@ -1,5 +1,5 @@
 const { saveBooking, getBookingByDetails, updateBookingStatus } = require('./db')
-const { createCalendarEvent } = require('./calendar')
+const { createCalendarEvent, deleteCalendarEvent } = require('./calendar')
 
 async function runTool(toolName, params, client) {
   console.log('Running tool:', toolName, 'for client:', client.business_name)
@@ -11,11 +11,25 @@ async function runTool(toolName, params, client) {
   if (toolName === 'create_booking') {
     console.log('CREATE BOOKING PARAMS:', JSON.stringify(params))
     const result = createMockBooking(params)
-    console.log('MOCK RESULT:', JSON.stringify(result))
 
     const tokens = {
       access_token: process.env.GOOGLE_ACCESS_TOKEN,
       refresh_token: process.env.GOOGLE_REFRESH_TOKEN
+    }
+
+    let calendarEventId = null
+    try {
+      const calendarEvent = await createCalendarEvent(tokens, {
+        caller_name: params.caller_name,
+        caller_phone: params.caller_phone,
+        property_address: params.property_address,
+        date: params.date,
+        time: params.time
+      })
+      calendarEventId = calendarEvent.id
+      console.log('Calendar event ID:', calendarEventId)
+    } catch (err) {
+      console.error('Calendar error:', err.message)
     }
 
     saveBooking({
@@ -27,16 +41,9 @@ async function runTool(toolName, params, client) {
       date: params.date,
       time: params.time,
       status: 'confirmed',
-      booking_ref: result.bookingId
+      booking_ref: result.bookingId,
+      calendar_event_id: calendarEventId
     }).catch(err => console.error('Save error:', err.message))
-
-    createCalendarEvent(tokens, {
-      caller_name: params.caller_name,
-      caller_phone: params.caller_phone,
-      property_address: params.property_address,
-      date: params.date,
-      time: params.time
-    }).catch(err => console.error('Calendar error:', err.message))
 
     return result
   }
@@ -58,9 +65,18 @@ async function runTool(toolName, params, client) {
 
     await updateBookingStatus(booking.id, 'cancelled')
 
+    if (booking.calendar_event_id) {
+      const tokens = {
+        access_token: process.env.GOOGLE_ACCESS_TOKEN,
+        refresh_token: process.env.GOOGLE_REFRESH_TOKEN
+      }
+      deleteCalendarEvent(tokens, booking.calendar_event_id)
+        .catch(err => console.error('Calendar delete error:', err.message))
+    }
+
     return {
       success: true,
-      message: `Your viewing at ${booking.property_address} on ${booking.date} at ${booking.time} has been cancelled.`
+      message: `Cancelled. ${booking.caller_name}'s viewing at ${booking.property_address} on ${booking.date} at ${booking.time} has been cancelled.`
     }
   }
 
