@@ -39,7 +39,7 @@ async function logCall(entry) {
 
 async function saveBooking(booking) {
   console.log('Attempting to save booking:', JSON.stringify(booking))
-  
+
   if (!booking.client_id) {
     delete booking.client_id
   }
@@ -57,7 +57,6 @@ async function saveBooking(booking) {
 }
 
 async function getBookingByDetails(callerName, propertyAddress, callerPhone, date) {
-  // Try phone number + date first (most reliable)
   if (callerPhone) {
     let query = supabase
       .from('bookings')
@@ -73,7 +72,6 @@ async function getBookingByDetails(callerName, propertyAddress, callerPhone, dat
     if (!error && data) return data
   }
 
-  // Fall back to name + address
   const { data, error } = await supabase
     .from('bookings')
     .select('*')
@@ -97,4 +95,30 @@ async function updateBookingStatus(bookingId, status) {
   if (error) console.error('Update booking error:', error.message)
 }
 
-module.exports = { getClientByAssistantId, logCall, saveBooking, getBookingByDetails, updateBookingStatus }
+async function rescheduleBooking(bookingId, newDate, newTime, newCalendarEventId) {
+  const updates = {
+    date: newDate,
+    time: newTime,
+    status: 'confirmed'
+  }
+
+  if (newCalendarEventId) {
+    updates.calendar_event_id = newCalendarEventId
+  }
+
+  const { error } = await supabase
+    .from('bookings')
+    .update(updates)
+    .eq('id', bookingId)
+
+  if (error) console.error('Reschedule error:', error.message)
+}
+
+module.exports = { 
+  getClientByAssistantId, 
+  logCall, 
+  saveBooking, 
+  getBookingByDetails, 
+  updateBookingStatus,
+  rescheduleBooking
+}

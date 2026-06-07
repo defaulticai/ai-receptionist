@@ -1,4 +1,4 @@
-const { saveBooking, getBookingByDetails, updateBookingStatus, logCall } = require('./db')
+const { saveBooking, getBookingByDetails, updateBookingStatus, rescheduleBooking, logCall } = require('./db')
 const { createCalendarEvent, deleteCalendarEvent } = require('./calendar')
 
 async function runTool(toolName, params, client) {
@@ -107,7 +107,71 @@ async function runTool(toolName, params, client) {
   }
 
   if (toolName === 'reschedule_booking') {
-    return rescheduleMockBooking(params)
+    console.log('RESCHEDULE BOOKING PARAMS:', JSON.stringify(params))
+
+    const booking = await getBookingByDetails(
+      params.caller_name,
+      params.property_address,
+      params.caller_phone,
+      params.date
+    )
+
+    if (!booking) {
+      logCall({
+        client_id: client.id,
+        caller_name: params.caller_name,
+        caller_phone: params.caller_phone,
+        action: 'reschedule_failed',
+        notes: `Could not find booking to reschedule — searched by phone ${params.caller_phone} date ${params.date}`
+      }).catch(err => console.error('Log error:', err.message))
+
+      return {
+        success: false,
+        message: 'I could not find a booking matching those details. Could you double check the name and date?'
+      }
+    }
+
+    const tokens = {
+      access_token: process.env.GOOGLE_ACCESS_TOKEN,
+      refresh_token: process.env.GOOGLE_REFRESH_TOKEN
+    }
+
+    // Delete old calendar event
+    if (booking.calendar_event_id) {
+      deleteCalendarEvent(tokens, booking.calendar_event_id)
+        .catch(err => console.error('Calendar delete error:', err.message))
+    }
+
+    // Create new calendar event
+    let newCalendarEventId = null
+    try {
+      const calendarEvent = await createCalendarEvent(tokens, {
+        caller_name: booking.caller_name,
+        caller_phone: booking.caller_phone,
+        property_address: booking.property_address,
+        date: params.new_date,
+        time: params.new_time
+      })
+      newCalendarEventId = calendarEvent.id
+    } catch (err) {
+      console.error('Calendar error:', err.message)
+    }
+
+    await rescheduleBooking(booking.id, params.new_date, params.new_time, newCalendarEventId)
+
+    logCall({
+      client_id: client.id,
+      caller_name: booking.caller_name,
+      caller_phone: booking.caller_phone,
+      action: 'rescheduled',
+      notes: `Viewing at ${booking.property_address} moved from ${booking.date} at ${booking.time} to ${params.new_date} at ${params.new_time}`,
+      booking_id: booking.id
+    }).catch(err => console.error('Log error:', err.message))
+
+    return {
+      success: true,
+      message: `Rescheduled. ${booking.caller_name}'s viewing at ${booking.property_address} has been moved to ${params.new_date} at ${params.new_time}.`
+    }
   }
 
   throw new Error('Unknown tool: ' + toolName)
@@ -127,13 +191,6 @@ function createMockBooking(params) {
     success: true,
     bookingId: 'MOCK-' + Math.floor(Math.random() * 10000),
     message: `Booking confirmed for ${params.caller_name} on ${params.date} at ${params.time}`
-  }
-}
-
-function rescheduleMockBooking(params) {
-  return {
-    success: true,
-    message: `Booking rescheduled for ${params.caller_name} to ${params.new_date} at ${params.new_time}`
   }
 }
 
