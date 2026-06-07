@@ -28,7 +28,7 @@ async function createCalendarEvent(tokens, booking) {
 
   const event = {
     summary: `Property Viewing — ${booking.property_address}`,
-    description: `Caller: ${booking.caller_name}\nPhone: ${booking.caller_phone}\nBooked via AI Receptionist`,
+    description: `Caller: ${booking.caller_name}\nPhone: ${booking.caller_phone || 'Not provided'}\nBooked via AI Receptionist`,
     start: {
       dateTime: startDateTime.toISOString(),
       timeZone: 'Europe/London'
