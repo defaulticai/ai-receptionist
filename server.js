@@ -45,7 +45,7 @@ app.get('/auth/google/callback', async (req, res) => {
   const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    'http://localhost:3000/auth/google/callback'
+    'https://noble-quietude-production-6f05.up.railway.app/auth/google/callback'
   )
   const { tokens } = await oauth2Client.getToken(code)
   console.log('GOOGLE TOKENS:', JSON.stringify(tokens))
