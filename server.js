@@ -1,5 +1,7 @@
 const express = require('express')
 const { routeToolCall } = require('./router')
+const { getAuthUrl } = require('./calendar')
+const { google } = require('googleapis')
 require('dotenv').config()
 
 const app = express()
@@ -31,6 +33,23 @@ app.post('/tool-call', async (req, res) => {
 
 app.get('/', (req, res) => {
   res.json({ status: 'AI Receptionist server is running' })
+})
+
+app.get('/auth/google', (req, res) => {
+  const url = getAuthUrl()
+  res.redirect(url)
+})
+
+app.get('/auth/google/callback', async (req, res) => {
+  const { code } = req.query
+  const oauth2Client = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    'http://localhost:3000/auth/google/callback'
+  )
+  const { tokens } = await oauth2Client.getToken(code)
+  console.log('GOOGLE TOKENS:', JSON.stringify(tokens))
+  res.send('Connected! Copy the tokens from your Railway logs and save them.')
 })
 
 const PORT = process.env.PORT || 3000
