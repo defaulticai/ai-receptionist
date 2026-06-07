@@ -1,4 +1,4 @@
-const { saveBooking, getBookingByDetails, updateBookingStatus, rescheduleBooking, logCall } = require('./db')
+const { saveBooking, getBookingByDetails, updateBookingStatus, rescheduleBooking, logCall, getBookingByEmail } = require('./db')
 const { createCalendarEvent, deleteCalendarEvent } = require('./calendar')
 const { sendBookingConfirmation, sendCancellationConfirmation, sendRescheduleConfirmation } = require('./email')
 
@@ -68,7 +68,6 @@ async function runTool(toolName, params, client) {
       notes: `Viewing booked at ${params.property_address} on ${params.date} at ${params.time}`
     }).catch(err => console.error('Log error:', err.message))
 
-    // Email to caller
     if (client.send_email_confirmation && params.caller_email) {
       try {
         await sendBookingConfirmation({
@@ -84,7 +83,6 @@ async function runTool(toolName, params, client) {
       }
     }
 
-    // Email to business owner
     if (client.business_email) {
       try {
         await sendBookingConfirmation({
@@ -148,7 +146,6 @@ async function runTool(toolName, params, client) {
       booking_id: booking.id
     }).catch(err => console.error('Log error:', err.message))
 
-    // Email to caller
     if (client.send_email_confirmation && params.caller_email) {
       try {
         await sendCancellationConfirmation({
@@ -164,7 +161,6 @@ async function runTool(toolName, params, client) {
       }
     }
 
-    // Email to business owner
     if (client.business_email) {
       try {
         await sendCancellationConfirmation({
@@ -246,7 +242,6 @@ async function runTool(toolName, params, client) {
       booking_id: booking.id
     }).catch(err => console.error('Log error:', err.message))
 
-    // Email to caller
     if (client.send_email_confirmation && params.caller_email) {
       try {
         await sendRescheduleConfirmation({
@@ -264,7 +259,6 @@ async function runTool(toolName, params, client) {
       }
     }
 
-    // Email to business owner
     if (client.business_email) {
       try {
         await sendRescheduleConfirmation({
@@ -288,29 +282,55 @@ async function runTool(toolName, params, client) {
     }
   }
 
+  if (toolName === 'confirm_booking') {
+    console.log('CONFIRM BOOKING PARAMS:', JSON.stringify(params))
+
+    const booking = await getBookingByEmail(params.caller_email)
+
+    if (!booking) {
+      return {
+        success: false,
+        message: 'I could not find a confirmed booking for that email address. Could you double check the email you used when booking?'
+      }
+    }
+
+    logCall({
+      client_id: client.id,
+      caller_name: booking.caller_name,
+      caller_phone: booking.caller_phone,
+      action: 'confirmed_check',
+      notes: `Caller checked booking at ${booking.property_address} on ${booking.date} at ${booking.time}`,
+      booking_id: booking.id
+    }).catch(err => console.error('Log error:', err.message))
+
+    return {
+      success: true,
+      message: `Confirmed. ${booking.caller_name}, your viewing at ${booking.property_address} is confirmed for ${booking.date} at ${booking.time}.`
+    }
+  }
+
   throw new Error('Unknown tool: ' + toolName)
 }
 
 async function getAvailabilityFromCalendar(date, tokens) {
   const { google } = require('googleapis')
   const { getOAuthClient } = require('./calendar')
-  
+
   const oauth2Client = getOAuthClient()
   oauth2Client.setCredentials(tokens)
-  
+
   const calendar = google.calendar({ version: 'v3', auth: oauth2Client })
-  
-  // Get all events on this date
+
   const startOfDay = new Date(`${date}T00:00:00Z`)
   const endOfDay = new Date(`${date}T23:59:59Z`)
-  
+
   const response = await calendar.events.list({
     calendarId: 'primary',
     timeMin: startOfDay.toISOString(),
     timeMax: endOfDay.toISOString(),
     singleEvents: true
   })
-  
+
   const bookedTimes = response.data.items.map(event => {
     const start = new Date(event.start.dateTime || event.start.date)
     const hours = start.getHours()
@@ -319,10 +339,10 @@ async function getAvailabilityFromCalendar(date, tokens) {
     const displayHours = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours
     return `${displayHours}:${minutes.toString().padStart(2, '0')}${period}`
   })
-  
+
   const allSlots = ['9:00am', '11:00am', '2:00pm', '4:00pm']
   const available = allSlots.filter(slot => !bookedTimes.includes(slot))
-  
+
   return {
     available: available.length > 0,
     slots: available,

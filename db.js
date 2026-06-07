@@ -119,11 +119,26 @@ async function rescheduleBooking(bookingId, newDate, newTime, newCalendarEventId
   if (error) console.error('Reschedule error:', error.message)
 }
 
+async function getBookingByEmail(callerEmail) {
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('*')
+    .eq('caller_email', callerEmail)
+    .eq('status', 'confirmed')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single()
+
+  if (error) return null
+  return data
+}
+
 module.exports = { 
   getClientByAssistantId, 
   logCall, 
   saveBooking, 
   getBookingByDetails, 
   updateBookingStatus,
-  rescheduleBooking
+  rescheduleBooking,
+  getBookingByEmail
 }
