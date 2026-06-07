@@ -1,4 +1,4 @@
-const { saveBooking, getBookingByDetails, updateBookingStatus } = require('./db')
+const { saveBooking, getBookingByDetails, updateBookingStatus, logCall } = require('./db')
 const { createCalendarEvent, deleteCalendarEvent } = require('./calendar')
 
 async function runTool(toolName, params, client) {
@@ -27,7 +27,6 @@ async function runTool(toolName, params, client) {
         time: params.time
       })
       calendarEventId = calendarEvent.id
-      console.log('Calendar event ID:', calendarEventId)
     } catch (err) {
       console.error('Calendar error:', err.message)
     }
@@ -45,19 +44,36 @@ async function runTool(toolName, params, client) {
       calendar_event_id: calendarEventId
     }).catch(err => console.error('Save error:', err.message))
 
+    logCall({
+      client_id: client.id,
+      caller_name: params.caller_name,
+      caller_phone: params.caller_phone,
+      action: 'booked',
+      notes: `Viewing booked at ${params.property_address} on ${params.date} at ${params.time}`
+    }).catch(err => console.error('Log error:', err.message))
+
     return result
   }
 
   if (toolName === 'cancel_booking') {
     console.log('CANCEL BOOKING PARAMS:', JSON.stringify(params))
 
-const booking = await getBookingByDetails(
-  params.caller_name,
-  params.property_address,
-  params.caller_phone,
-  params.date
-)
+    const booking = await getBookingByDetails(
+      params.caller_name,
+      params.property_address,
+      params.caller_phone,
+      params.date
+    )
+
     if (!booking) {
+      logCall({
+        client_id: client.id,
+        caller_name: params.caller_name,
+        caller_phone: params.caller_phone,
+        action: 'cancel_failed',
+        notes: `Could not find booking to cancel — searched by phone ${params.caller_phone} date ${params.date}`
+      }).catch(err => console.error('Log error:', err.message))
+
       return {
         success: false,
         message: 'I could not find a booking matching those details. Could you double check the name and property address?'
@@ -74,6 +90,15 @@ const booking = await getBookingByDetails(
       deleteCalendarEvent(tokens, booking.calendar_event_id)
         .catch(err => console.error('Calendar delete error:', err.message))
     }
+
+    logCall({
+      client_id: client.id,
+      caller_name: booking.caller_name,
+      caller_phone: booking.caller_phone,
+      action: 'cancelled',
+      notes: `Viewing at ${booking.property_address} on ${booking.date} at ${booking.time} cancelled`,
+      booking_id: booking.id
+    }).catch(err => console.error('Log error:', err.message))
 
     return {
       success: true,
