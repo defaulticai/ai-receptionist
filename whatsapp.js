@@ -38,20 +38,18 @@ async function handleIncomingWhatsApp(payload) {
         const privacyCheck = await checkContactPrivacy(senderNumber);
         
         if (!privacyCheck.allowAI) {
-           // Change 'gemini-1.5-flash' to 'gemini-2.5-flash'
-const model = ai.getGenerativeModel({ 
-    model: 'gemini-2.5-flash',
-    systemInstruction: "You are a helpful and polite receptionist assistant. Keep your answers brief, clear, and friendly."
-});
+            console.log(`🛡️ INTERCEPTED: Blocked AI processing for ${privacyCheck.name || senderNumber}.`);
+            console.log(`==================================================\n`);
+            return; 
+        }
 
         console.log(`🟢 CLEARED: Forwarding to Gemini AI Brain...`);
         
-        // 3. Grab the model client the standard way
-        // Change 'gemini-2.5-flash' to 'gemini-1.5-flash'
-const model = ai.getGenerativeModel({ 
-    model: 'gemini-1.5-flash',
-    systemInstruction: "You are a helpful and polite receptionist assistant. Keep your answers brief, clear, and friendly."
-});
+        // 3. Grab the model client using the correct 2.5-flash identifier
+        const model = ai.getGenerativeModel({ 
+            model: 'gemini-2.5-flash',
+            systemInstruction: "You are a helpful and polite receptionist assistant. Keep your answers brief, clear, and friendly."
+        });
         
         // 4. Generate content structural call
         const response = await model.generateContent(messageText);
