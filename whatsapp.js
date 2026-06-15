@@ -73,9 +73,7 @@ async function handleIncomingWhatsApp(payload) {
                     delay: 1200,
                     presence: 'composing'
                 },
-                textMessage: {
-                    text: aiReply
-                }
+                text: aiReply // Straight text parameter to fix the 400 Bad Request error
             })
         });
 
@@ -91,5 +89,3 @@ async function handleIncomingWhatsApp(payload) {
 }
 
 module.exports = handleIncomingWhatsApp;
-
-// ey
