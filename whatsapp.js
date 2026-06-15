@@ -1,5 +1,9 @@
 const { checkContactPrivacy } = require('./interceptor');
+const { GoogleGenAI } = require('@google/genai');
 require('dotenv').config();
+
+// Initialize the Gemini AI engine using the key you saved in Railway
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 /**
  * Handles incoming webhooks fired from your Evolution API container on Railway
@@ -14,8 +18,7 @@ async function handleIncomingWhatsApp(payload) {
 
         const messageData = payload.data;
         
-        // 2. Extract the clean phone number and message content from Evolution API's payload
-        // Evolution JIDs look like "447123456789@s.whatsapp.net", so we split it to get just the number
+        // 2. Extract the clean phone number and message content
         const rawRemoteJid = messageData.key?.remoteJid || '';
         const senderNumber = rawRemoteJid.split('@')[0];
         
@@ -30,25 +33,58 @@ async function handleIncomingWhatsApp(payload) {
         console.log(`\n==================================================`);
         console.log(`📩 New message from ${senderNumber}: "${messageText}"`);
 
-        // 3. Run the phone number through your security privacy shield
+        // 3. Run the phone number through your privacy shield
         const privacyCheck = await checkContactPrivacy(senderNumber);
         
         if (!privacyCheck.allowAI) {
-            console.log(`🛡️ INTERCEPTED: Blocked AI processing for ${privacyCheck.name || senderNumber}. Reason: ${privacyCheck.reason}`);
+            console.log(`🛡️ INTERCEPTED: Blocked AI processing for ${privacyCheck.name || senderNumber}.`);
             console.log(`==================================================\n`);
-            return; // Stops execution immediately. The AI will never see this text.
+            return; 
         }
 
-        // 4. If cleared by the interceptor, pass it to your business flow
-        console.log(`🟢 CLEARED: Contact is a ${privacyCheck.reason} (${privacyCheck.name}). Forwarding to AI Brain...`);
-        console.log(`==================================================\n`);
+        // 4. If cleared by the interceptor, pass it to Gemini
+        console.log(`🟢 CLEARED: Forwarding to Gemini AI Brain...`);
+        
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: messageText,
+            config: {
+                systemInstruction: "You are a helpful and polite receptionist assistant. Keep your answers brief, clear, and friendly.",
+            }
+        });
 
-        // TODO: Next step will be hooking up Gemini API right here to read 'messageText' and answer back!
+        const aiReply = response.text;
+        console.log(`🤖 Gemini Generated Reply: "${aiReply}"`);
+
+        // 5. Send the reply back out to WhatsApp via Evolution API
+        // We use payload.server_url and payload.apikey so it automatically uses your live credentials!
+        const evolutionUrl = `${payload.server_url}/message/sendText/${payload.instance}`;
+        
+        console.log(`📤 Sending reply back to WhatsApp...`);
+        await fetch(evolutionUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'apikey': payload.apikey
+            },
+            body: JSON.stringify({
+                number: senderNumber,
+                options: {
+                    delay: 1200, // Makes it look realistic by waiting 1.2 seconds before replying
+                    presence: 'composing' // Shows the "typing..." status on WhatsApp
+                },
+                textMessage: {
+                    text: aiReply
+                }
+            })
+        });
+
+        console.log(`✅ Reply successfully sent!`);
+        console.log(`==================================================\n`);
         
     } catch (error) {
         console.error('Error processing incoming WhatsApp webhook logic:', error);
     }
 }
 
-// Export it as a plain function so router.js can invoke it directly via: await whatsappHandler(req.body)
 module.exports = handleIncomingWhatsApp;
