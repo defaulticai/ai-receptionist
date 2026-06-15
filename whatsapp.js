@@ -38,10 +38,11 @@ async function handleIncomingWhatsApp(payload) {
         const privacyCheck = await checkContactPrivacy(senderNumber);
         
         if (!privacyCheck.allowAI) {
-            console.log(`🛡️ INTERCEPTED: Blocked AI processing for ${privacyCheck.name || senderNumber}.`);
-            console.log(`==================================================\n`);
-            return; 
-        }
+           // Change 'gemini-1.5-flash' to 'gemini-2.5-flash'
+const model = ai.getGenerativeModel({ 
+    model: 'gemini-2.5-flash',
+    systemInstruction: "You are a helpful and polite receptionist assistant. Keep your answers brief, clear, and friendly."
+});
 
         console.log(`🟢 CLEARED: Forwarding to Gemini AI Brain...`);
         
