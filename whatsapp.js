@@ -7,21 +7,22 @@ async function getClientByPhoneNumber(phone) {
     return null; 
 }
 
-// Track connection delays to prevent rapid crash looping
 let reconnectAttempts = 0;
 
 async function connectToWhatsApp() {
     // 1. Manage session authentication state
     const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
 
-    // 2. Initialize the WhatsApp socket connection with custom browser properties
+    // 2. Initialize connection with standard Chrome headers to bypass 405 blocks
     const sock = makeWASocket({
         auth: state,
         logger: pino({ level: 'silent' }),
-        browser: Browsers.macOS('Desktop'), // Forces WhatsApp to recognize a standard web dashboard environment
+        browser: Browsers.ubuntu('Chrome'), // Sets user-agent to Ubuntu/Chrome to mask the host network
+        syncFullHistory: false,             // Bypasses massive structural data loads that cause connection lag
+        markOnlineOnConnect: true,          // Immediately keeps connection alive on shake
         connectTimeoutMs: 60000,
-        defaultQueryTimeoutMs: 0,
-        keepAliveIntervalMs: 10000
+        defaultQueryTimeoutMs: 60000,
+        keepAliveIntervalMs: 30000
     });
 
     // 3. Listen for credentials update to stay logged in
@@ -41,15 +42,15 @@ async function connectToWhatsApp() {
         }
 
         if (connection === 'close') {
-            const statusCode = lastDisconnect?.error?.output?.statusCode;
+            const statusCode = lastDisconnect?.error?.output?.statusCode || 500;
             const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
             
             console.log(`⚠️ WhatsApp connection closed (Status: ${statusCode}). Reconnecting: ${shouldReconnect}`);
             
             if (shouldReconnect) {
-                // Apply an incremental slowdown window (exponential backoff delay) to prevent spamming
                 reconnectAttempts++;
-                const delayMs = Math.min(1000 * Math.pow(2, reconnectAttempts), 20000); 
+                // Slower throttle window to prevent WhatsApp security flags
+                const delayMs = Math.min(2000 * Math.pow(2, reconnectAttempts), 30000); 
                 console.log(`⏱️ Waiting ${delayMs / 1000} seconds before attempting reconnect...`);
                 
                 setTimeout(() => {
@@ -57,7 +58,7 @@ async function connectToWhatsApp() {
                 }, delayMs);
             }
         } else if (connection === 'open') {
-            reconnectAttempts = 0; // Reset tracking on successful connection
+            reconnectAttempts = 0; 
             console.log('\n==================================================');
             console.log('🎉 WHATSAPP CONNECTION OPENED SUCCESSFULLY 🎉');
             console.log('==================================================\n');
