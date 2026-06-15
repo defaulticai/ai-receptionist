@@ -1,10 +1,10 @@
 const { checkContactPrivacy } = require('./interceptor');
-// 1. Change the package name to match your new package.json dependency
-const { GoogleGenAI } = require('@google/generative-ai'); 
+// 1. Correct class export from the stable official library
+const { GoogleGenerativeAI } = require('@google/generative-ai'); 
 require('dotenv').config();
 
-// 2. Initialize the client using the correct library syntax
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+// 2. Initialize using standard parameters
+const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 /**
  * Handles incoming webhooks fired from your Evolution API container on Railway
@@ -45,16 +45,16 @@ async function handleIncomingWhatsApp(payload) {
 
         console.log(`🟢 CLEARED: Forwarding to Gemini AI Brain...`);
         
-        // Use the standard generation function for this package configuration
-        const response = await ai.models.generateContent({
+        // 3. Grab the model client the standard way
+        const model = ai.getGenerativeModel({ 
             model: 'gemini-2.5-flash',
-            contents: messageText,
-            config: {
-                systemInstruction: "You are a helpful and polite receptionist assistant. Keep your answers brief, clear, and friendly.",
-            }
+            systemInstruction: "You are a helpful and polite receptionist assistant. Keep your answers brief, clear, and friendly."
         });
-
-        const aiReply = response.text;
+        
+        // 4. Generate content structural call
+        const response = await model.generateContent(messageText);
+        const aiReply = response.response.text();
+        
         console.log(`🤖 Gemini Generated Reply: "${aiReply}"`);
 
         // Send the reply back out to WhatsApp via Evolution API
