@@ -1,33 +1,45 @@
 const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
 const qrcode = require('qrcode-terminal');
 const pino = require('pino');
-const { getClientByPhoneNumber } = require('./db'); // Assuming you have a helper to check contacts
+
+// Temporary dummy helper until we hook up the full Supabase interceptor
+async function getClientByPhoneNumber(phone) {
+    return null; 
+}
 
 async function connectToWhatsApp() {
     // 1. Manage session authentication state
     const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
 
-    // 2. Initialize the WhatsApp socket connection
+    // 2. Initialize the WhatsApp socket connection (Removed deprecated option)
     const sock = makeWASocket({
         auth: state,
-        logger: pino({ level: 'silent' }), // Keeps logs clean
-        printQRInTerminal: true // Prints QR code directly in terminal/Railway logs
+        logger: pino({ level: 'silent' })
     });
 
     // 3. Listen for credentials update to stay logged in
     sock.ev.on('creds.update', saveCreds);
 
-    // 4. Handle connection states (Disconnects, Reconnects)
+    // 4. Handle connection states (Catch the QR code here manually!)
     sock.ev.on('connection.update', (update) => {
-        const { connection, lastDisconnect } = update;
+        const { connection, lastDisconnect, qr } = update;
+
+        // If a QR code is sent by WhatsApp, print it to the logs manually
+        if (qr) {
+            console.log('--- SCAN THE QR CODE BELOW TO LINK WHATSAPP ---');
+            qrcode.generate(qr, { small: true });
+        }
+
         if (connection === 'close') {
             const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
-            console.log('WhatsApp connection closed due to ', lastDisconnect?.error, ', reconnecting: ', shouldReconnect);
+            console.log('WhatsApp connection closed, reconnecting: ', shouldReconnect);
             if (shouldReconnect) {
                 connectToWhatsApp();
             }
         } else if (connection === 'open') {
+            console.log('==================================================');
             console.log('🎉 WHATSAPP CONNECTION OPENED SUCCESSFULLY 🎉');
+            console.log('==================================================');
         }
     });
 
@@ -36,10 +48,9 @@ async function connectToWhatsApp() {
         if (m.type !== 'notify') return;
 
         for (const msg of m.messages) {
-            // Ignore messages sent by the instructor themselves
             if (msg.key.fromMe) continue;
 
-            const senderNumber = msg.key.remoteJid.split('@')[0]; // Extracts the clean phone number
+            const senderNumber = msg.key.remoteJid.split('@')[0];
             const messageText = msg.message?.conversation || msg.message?.extendedTextMessage?.text;
 
             if (!messageText) continue;
@@ -47,15 +58,13 @@ async function connectToWhatsApp() {
             console.log(`Incoming WhatsApp from: ${senderNumber}`);
 
             try {
-                // Check if sender is flagged as Family in Supabase
                 const clientRecord = await getClientByPhoneNumber(senderNumber);
                 
                 if (clientRecord && clientRecord.is_family) {
                     console.log(`🤫 Family message detected from ${senderNumber}. AI is BLIND to this chat.`);
-                    continue; // Skip processing completely. The instructor handles this manually.
+                    continue; 
                 }
 
-                // TODO: Route non-family student messages to your AI/Router logic here
                 console.log(`🤖 AI Processing student message: "${messageText}"`);
 
             } catch (err) {
