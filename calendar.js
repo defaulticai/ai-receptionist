@@ -4,7 +4,7 @@ function getOAuthClient() {
   return new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    'https://noble-quietude-production-6f05.up.railway.app/auth/google/callback'
+    'https://web-production-547cb.up.railway.app/auth/google/callback'
   )
 }
 
