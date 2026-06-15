@@ -45,7 +45,7 @@ async function handleIncomingWhatsApp(payload) {
 
         console.log(`🟢 CLEARED: Forwarding to Gemini AI Brain...`);
         
-        // 3. Grab the model client using the correct 2.5-flash identifier
+        // 3. Grab the model client using the correct 2.5-flash identifier (ONLY ONCE)
         const model = ai.getGenerativeModel({ 
             model: 'gemini-2.5-flash',
             systemInstruction: "You are a helpful and polite receptionist assistant. Keep your answers brief, clear, and friendly."
@@ -91,5 +91,3 @@ async function handleIncomingWhatsApp(payload) {
 }
 
 module.exports = handleIncomingWhatsApp;
-
-// Force re-deploy trigger
