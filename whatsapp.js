@@ -93,3 +93,5 @@ const model = ai.getGenerativeModel({
 }
 
 module.exports = handleIncomingWhatsApp;
+
+// Force re-deploy trigger
