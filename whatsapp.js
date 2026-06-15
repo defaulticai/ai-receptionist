@@ -1,8 +1,9 @@
 const { checkContactPrivacy } = require('./interceptor');
-const { GoogleGenAI } = require('@google/genai');
+// 1. Change the package name to match your new package.json dependency
+const { GoogleGenAI } = require('@google/generative-ai'); 
 require('dotenv').config();
 
-// Initialize the Gemini AI engine using the key you saved in Railway
+// 2. Initialize the client using the correct library syntax
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 /**
@@ -11,14 +12,14 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
  */
 async function handleIncomingWhatsApp(payload) {
     try {
-        // 1. Ensure the webhook payload represents a new incoming message event (FIXED CASE SENSITIVITY)
+        // Ensure the webhook payload represents a new incoming message event (case-insensitive)
         if (!payload.event || payload.event.toLowerCase() !== 'messages.upsert' || payload.data?.key?.fromMe === true) {
             return; 
         }
 
         const messageData = payload.data;
         
-        // 2. Extract the clean phone number and message content
+        // Extract the clean phone number and message content
         const rawRemoteJid = messageData.key?.remoteJid || '';
         const senderNumber = rawRemoteJid.split('@')[0];
         
@@ -33,7 +34,7 @@ async function handleIncomingWhatsApp(payload) {
         console.log(`\n==================================================`);
         console.log(`📩 New message from ${senderNumber}: "${messageText}"`);
 
-        // 3. Run the phone number through your privacy shield
+        // Run the phone number through your privacy shield
         const privacyCheck = await checkContactPrivacy(senderNumber);
         
         if (!privacyCheck.allowAI) {
@@ -42,9 +43,9 @@ async function handleIncomingWhatsApp(payload) {
             return; 
         }
 
-        // 4. If cleared by the interceptor, pass it to Gemini
         console.log(`🟢 CLEARED: Forwarding to Gemini AI Brain...`);
         
+        // Use the standard generation function for this package configuration
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: messageText,
@@ -56,7 +57,7 @@ async function handleIncomingWhatsApp(payload) {
         const aiReply = response.text;
         console.log(`🤖 Gemini Generated Reply: "${aiReply}"`);
 
-        // 5. Send the reply back out to WhatsApp via Evolution API
+        // Send the reply back out to WhatsApp via Evolution API
         const evolutionUrl = `${payload.server_url}/message/sendText/${payload.instance}`;
         
         console.log(`📤 Sending reply back to WhatsApp to URL: ${evolutionUrl}`);
@@ -69,8 +70,8 @@ async function handleIncomingWhatsApp(payload) {
             body: JSON.stringify({
                 number: senderNumber,
                 options: {
-                    delay: 1200, // Makes it look realistic by waiting 1.2 seconds before replying
-                    presence: 'composing' // Shows the "typing..." status on WhatsApp
+                    delay: 1200,
+                    presence: 'composing'
                 },
                 textMessage: {
                     text: aiReply
