@@ -1,5 +1,6 @@
 const { getClientByAssistantId } = require('./db')
 const { runTool } = require('./tools')
+const whatsappHandler = require('./whatsapp') // Import your whatsapp helper file
 
 async function routeToolCall(body) {
   console.log('BODY:', JSON.stringify(body))
@@ -23,4 +24,23 @@ async function routeToolCall(body) {
   return runTool(toolName, parameters, client)
 }
 
-module.exports = { routeToolCall }
+// New Express webhook handler function for Evolution API
+async function handleWhatsAppWebhook(req, res) {
+  try {
+    console.log('Incoming WhatsApp Webhook Data:', JSON.stringify(req.body));
+    
+    // Pass the webhook data payload straight to your whatsapp.js file logic
+    await whatsappHandler(req.body);
+    
+    // Always tell Evolution API we received the message successfully
+    return res.status(200).send({ status: 'success' });
+  } catch (error) {
+    console.error('Error in WhatsApp webhook endpoint:', error);
+    return res.status(500).send({ error: 'Internal Server Error' });
+  }
+}
+
+module.exports = { 
+  routeToolCall,
+  handleWhatsAppWebhook 
+}
