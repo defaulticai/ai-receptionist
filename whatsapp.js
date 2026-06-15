@@ -11,8 +11,8 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
  */
 async function handleIncomingWhatsApp(payload) {
     try {
-        // 1. Ensure the webhook payload represents a new incoming message event
-        if (payload.event !== 'MESSAGES_UPSERT' || payload.data?.key?.fromMe === true) {
+        // 1. Ensure the webhook payload represents a new incoming message event (FIXED CASE SENSITIVITY)
+        if (!payload.event || payload.event.toLowerCase() !== 'messages.upsert' || payload.data?.key?.fromMe === true) {
             return; 
         }
 
@@ -57,11 +57,10 @@ async function handleIncomingWhatsApp(payload) {
         console.log(`🤖 Gemini Generated Reply: "${aiReply}"`);
 
         // 5. Send the reply back out to WhatsApp via Evolution API
-        // We use payload.server_url and payload.apikey so it automatically uses your live credentials!
         const evolutionUrl = `${payload.server_url}/message/sendText/${payload.instance}`;
         
-        console.log(`📤 Sending reply back to WhatsApp...`);
-        await fetch(evolutionUrl, {
+        console.log(`📤 Sending reply back to WhatsApp to URL: ${evolutionUrl}`);
+        const apiResponse = await fetch(evolutionUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -79,7 +78,10 @@ async function handleIncomingWhatsApp(payload) {
             })
         });
 
-        console.log(`✅ Reply successfully sent!`);
+        const apiResult = await apiResponse.json().catch(() => ({}));
+        console.log(`Evolution API Raw Response:`, JSON.stringify(apiResult));
+
+        console.log(`✅ Reply attempt finished!`);
         console.log(`==================================================\n`);
         
     } catch (error) {
