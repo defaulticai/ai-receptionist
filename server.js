@@ -2,7 +2,6 @@ const express = require('express')
 const { routeToolCall, handleWhatsAppWebhook } = require('./router') // Imported the new WhatsApp webhook handler
 const { getAuthUrl } = require('./calendar')
 const { google } = require('googleapis')
-const { connectToWhatsApp } = require('./whatsapp')
 require('dotenv').config()
 
 const app = express()
@@ -61,5 +60,4 @@ app.get('/auth/google/callback', async (req, res) => {
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
-  connectToWhatsApp()
 })
