@@ -1,4 +1,4 @@
-const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
+const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, Browsers } = require('@whiskeysockets/baileys');
 const qrcode = require('qrcode-terminal');
 const pino = require('pino');
 
@@ -7,39 +7,60 @@ async function getClientByPhoneNumber(phone) {
     return null; 
 }
 
+// Track connection delays to prevent rapid crash looping
+let reconnectAttempts = 0;
+
 async function connectToWhatsApp() {
     // 1. Manage session authentication state
     const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
 
-    // 2. Initialize the WhatsApp socket connection (Removed deprecated option)
+    // 2. Initialize the WhatsApp socket connection with custom browser properties
     const sock = makeWASocket({
         auth: state,
-        logger: pino({ level: 'silent' })
+        logger: pino({ level: 'silent' }),
+        browser: Browsers.macOS('Desktop'), // Forces WhatsApp to recognize a standard web dashboard environment
+        connectTimeoutMs: 60000,
+        defaultQueryTimeoutMs: 0,
+        keepAliveIntervalMs: 10000
     });
 
     // 3. Listen for credentials update to stay logged in
     sock.ev.on('creds.update', saveCreds);
 
-    // 4. Handle connection states (Catch the QR code here manually!)
-    sock.ev.on('connection.update', (update) => {
+    // 4. Handle connection states cleanly
+    sock.ev.on('connection.update', async (update) => {
         const { connection, lastDisconnect, qr } = update;
 
-        // If a QR code is sent by WhatsApp, print it to the logs manually
+        // Display the text QR code safely
         if (qr) {
-            console.log('--- SCAN THE QR CODE BELOW TO LINK WHATSAPP ---');
+            console.log('\n==================================================');
+            console.log('📱 SCAN THE QR CODE BELOW TO LINK WHATSAPP 📱');
+            console.log('==================================================\n');
             qrcode.generate(qr, { small: true });
+            console.log('\n==================================================\n');
         }
 
         if (connection === 'close') {
-            const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
-            console.log('WhatsApp connection closed, reconnecting: ', shouldReconnect);
+            const statusCode = lastDisconnect?.error?.output?.statusCode;
+            const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+            
+            console.log(`⚠️ WhatsApp connection closed (Status: ${statusCode}). Reconnecting: ${shouldReconnect}`);
+            
             if (shouldReconnect) {
-                connectToWhatsApp();
+                // Apply an incremental slowdown window (exponential backoff delay) to prevent spamming
+                reconnectAttempts++;
+                const delayMs = Math.min(1000 * Math.pow(2, reconnectAttempts), 20000); 
+                console.log(`⏱️ Waiting ${delayMs / 1000} seconds before attempting reconnect...`);
+                
+                setTimeout(() => {
+                    connectToWhatsApp();
+                }, delayMs);
             }
         } else if (connection === 'open') {
-            console.log('==================================================');
+            reconnectAttempts = 0; // Reset tracking on successful connection
+            console.log('\n==================================================');
             console.log('🎉 WHATSAPP CONNECTION OPENED SUCCESSFULLY 🎉');
-            console.log('==================================================');
+            console.log('==================================================\n');
         }
     });
 
