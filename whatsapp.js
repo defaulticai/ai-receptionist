@@ -46,10 +46,11 @@ async function handleIncomingWhatsApp(payload) {
         console.log(`🟢 CLEARED: Forwarding to Gemini AI Brain...`);
         
         // 3. Grab the model client the standard way
-        const model = ai.getGenerativeModel({ 
-            model: 'gemini-2.5-flash',
-            systemInstruction: "You are a helpful and polite receptionist assistant. Keep your answers brief, clear, and friendly."
-        });
+        // Change 'gemini-2.5-flash' to 'gemini-1.5-flash'
+const model = ai.getGenerativeModel({ 
+    model: 'gemini-1.5-flash',
+    systemInstruction: "You are a helpful and polite receptionist assistant. Keep your answers brief, clear, and friendly."
+});
         
         // 4. Generate content structural call
         const response = await model.generateContent(messageText);
