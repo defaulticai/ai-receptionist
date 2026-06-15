@@ -2,6 +2,7 @@ const express = require('express')
 const { routeToolCall } = require('./router')
 const { getAuthUrl } = require('./calendar')
 const { google } = require('googleapis')
+const { connectToWhatsApp } = require('./whatsapp') // 1. Imported WhatsApp client
 require('dotenv').config()
 
 const app = express()
@@ -55,4 +56,7 @@ app.get('/auth/google/callback', async (req, res) => {
 })
 
 const PORT = process.env.PORT || 3000
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`)
+  connectToWhatsApp() // 2. Trigger the WhatsApp engine on startup
+})
