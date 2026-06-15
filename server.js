@@ -1,8 +1,8 @@
 const express = require('express')
-const { routeToolCall } = require('./router')
+const { routeToolCall, handleWhatsAppWebhook } = require('./router') // Imported the new WhatsApp webhook handler
 const { getAuthUrl } = require('./calendar')
 const { google } = require('googleapis')
-const { connectToWhatsApp } = require('./whatsapp') // 1. Imported WhatsApp client
+const { connectToWhatsApp } = require('./whatsapp')
 require('dotenv').config()
 
 const app = express()
@@ -32,6 +32,9 @@ app.post('/tool-call', async (req, res) => {
   }
 })
 
+// New POST route to open the door for Evolution API webhooks
+app.post('/webhooks/whatsapp', handleWhatsAppWebhook)
+
 app.get('/', (req, res) => {
   res.json({ status: 'AI Receptionist server is running' })
 })
@@ -58,5 +61,5 @@ app.get('/auth/google/callback', async (req, res) => {
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
-  connectToWhatsApp() // 2. Trigger the WhatsApp engine on startup
+  connectToWhatsApp()
 })
