@@ -1,35 +1,36 @@
-const { createClient } = require('@supabase/supabase-js');
+const supabase = require('./supabaseClient');
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+/**
+ * Checks if a contact is a friend/family member who should NOT be handled by the AI
+ * @param {string} senderNumber - The raw phone number from WhatsApp
+ * @returns {Object} { allowAI: boolean, name: string|null }
+ */
+async function checkContactPrivacy(senderNumber) {
+    try {
+        // Look up the phone number in your Supabase 'contacts' table
+        const { data, error } = await supabase
+            .from('contacts') 
+            .select('name')
+            .eq('phone_number', senderNumber)
+            .single();
 
-async function checkContactPrivacy(incomingNumber) {
-    if (!incomingNumber) return { allowAI: true, reason: 'No number provided' };
-    
-    const cleanNumber = incomingNumber.replace(/\D/g, ''); 
+        if (error && error.code !== 'PGRST116') { // PGRST116 means "no rows found", which is a normal stranger
+            console.error('Supabase lookup error:', error);
+            return { allowAI: true }; // If database errors, default to letting AI handle it safely
+        }
 
-    const { data: contact, error } = await supabase
-        .from('contacts')
-        .select('relationship_type, name')
-        .eq('phone_number', cleanNumber)
-        .single();
+        // 1. If data is found, they ARE family or a friend -> DO NOT LET AI REPLY
+        if (data) {
+            return { allowAI: false, name: data.name }; 
+        }
 
-    if (error && error.code !== 'PGRST116') {
-        console.error("Database error during lookup:", error);
+        // 2. If NO data is found, they are a student, customer, or stranger -> LET AI REPLY!
+        return { allowAI: true, name: null };
+
+    } catch (err) {
+        console.error('Error in privacy shield execution:', err);
+        return { allowAI: true };
     }
-
-    if (contact && contact.relationship_type === 'Family') {
-        return { 
-            allowAI: false, 
-            reason: 'Family Privacy Shield Active', 
-            name: contact.name 
-        };
-    }
-
-    return { 
-        allowAI: true, 
-        reason: contact ? 'Existing Student' : 'New Lead', 
-        name: contact ? contact.name : 'Unknown Caller' 
-    };
 }
 
 module.exports = { checkContactPrivacy };
