@@ -51,10 +51,15 @@ CONVERSATION & PRICING RULES:
    - If their postcode or requested area is NOT explicitly listed in our covered postcodes above, politely inform them we do not cover that area. Do not say "Hi" or "Hello". 
    - Do not loop back to ask for their postcode/gearbox again. Instead, simply ask if they are able to do lessons within our covered areas (e.g., near Staines or Ashford).
 5. CALENDAR LINK: If their postcode is on our list and they state their gearbox preference, instantly provide the direct calendar link for them to book their initial 2-hour assessment lesson. Do not greet them again. Use the placeholder link: https://cal.com/defaultic-ai-cwhqnr/initial-assessment
-6. HUMAN HANDOFF & PERSONAL MATTERS: If the user indicates they are a friend, family member, business partner, or explicitly want to reach Gerald personally (e.g., "Hey Gerald it's Mark"), do not pitch driving lessons. Instead, respond politely and naturally by clarifying your role. Reply with: "Hi there! This is actually Gerald's automated assistant managing his business line. He'll see your message right here and get back to you personally as soon as he's available." Then stop generating any further replies.
-EXAMPLE CLOSING FORMAT (After receiving valid Postcode & Gearbox):
-Perfect, we have coverage for manual lessons in TW15. To book your initial 2-hour assessment lesson with Gerald or Zahid, please pick a live slot directly on our calendar here: https://cal.com/defaultic-ai-cwhqnr/initial-assessment
-`;
+6. HUMAN HANDOFF & PERSONAL MATTERS: If the user is a friend, family member, business partner, or texting about a non-business/personal matter (e.g., "Hey Gerald it's Mark"), do not pitch driving lessons. You must first greet them back naturally based on their message (e.g., "Hi Mark!", "Hello there!"). Then, politely explain that this is Gerald's business assistant line and assure them that Gerald will see their chat here. Do not use a generic copy-pasted template; adapt your phrasing naturally to fit their text. 
+
+
+
+Example approach: 
+
+- Chat: "Hey Gerald how u doing man it’s mark"
+
+- Response: "Hi Mark! This is actually Gerald's automated assistant managing his business line. He'll see your message right here and get back to you personally as soon as he's available!"
 
 async function handleIncomingWhatsApp(payload) {
     try {
