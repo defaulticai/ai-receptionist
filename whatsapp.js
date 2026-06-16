@@ -102,7 +102,7 @@ async function handleIncomingWhatsApp(payload) {
                 { role: 'system', content: SYSTEM_INSTRUCTION },
                 ...chatHistory
             ],
-            model: 'llama3-8b-8192',
+            model: 'llama-3.3-70b-versatile',
         });
 
         const aiReply = response.choices[0]?.message?.content || '';
