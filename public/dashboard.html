@@ -6,21 +6,15 @@
     <title>Gerald Driver Training - Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <script type="text/javascript">
-      (function (C, A, L) { let p = function (a, ar) { a.q.push(ar); }; let d = C.document; C.Cal = C.Cal || function () { let cal = C.Cal; let ar = arguments; if (!cal.loaded) { cal.ns = {}; cal.q = cal.q || []; d.head.appendChild(d.createElement("script")).src = A; cal.loaded = true; } if (ar[0] === L) { const api = cal.ns[namespace] = api) && p(api, ar) : p(cal, ar); return; } p(cal, ar); }; })(window, "https://app.cal.com/embed/embed.js", "init");
-      Cal("init", {origin:"https://cal.com"});
-    </script>
-
     <style>
-        /* Force the Cal.com embed container to maintain structural visibility and not collapse to 0px */
-        #cal-inline-embed {
-            min-height: 700px !important;
-            height: 100% !important;
-            width: 100% !important;
-            display: block !important;
+        /* Force the Google Calendar embed container to maintain beautiful structural visibility */
+        .calendar-frame {
+            min-height: 650px;
+            height: 100%;
+            width: 100%;
         }
         /* Ensure the parent grid column block balances layout height scale changes */
-        .lg\:col-span-7 {
+        .lg:col-span-7 {
             min-height: 750px;
         }
     </style>
@@ -98,10 +92,16 @@
             <div class="bg-slate-800/40 border border-slate-800 rounded-2xl p-6 backdrop-blur-md h-full flex flex-col">
                 <div class="mb-4">
                     <h2 class="text-xl font-bold text-white">📅 Integrated Booking Diary</h2>
-                    <p class="text-xs text-slate-400 mt-1">Live visibility synced with your Google Calendar scheduling slots.</p>
+                    <p class="text-xs text-slate-400 mt-1">Live visibility synced directly with your Google Calendar scheduling slots.</p>
                 </div>
                 
-                <div id="cal-inline-embed" class="w-full flex-1 rounded-xl overflow-hidden border border-slate-700 bg-slate-900/40"></div>
+                <iframe 
+                    src="https://calendar.google.com/calendar/embed?src=defaulticai@gmail.com&ctz=Europe%2FLondon&wkst=2&bgcolor=%230f172a&mode=WEEK&showPrint=0&showTabs=1&showCalendars=0" 
+                    style="border: 0" 
+                    class="calendar-frame rounded-xl border border-slate-700 bg-slate-900/40"
+                    frameborder="0" 
+                    scrolling="no"
+                ></iframe>
             </div>
         </div>
 
@@ -112,26 +112,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             fetchStudents();
-            initializeCalEmbed();
         });
-
-       // Configure Cal.com rendering target properties with live user link
-        function initializeCalEmbed() {
-            Cal("inline", {
-                elementOrSelector: "#cal-inline-embed",
-                calLink: "defaultic-ai-cwhqnr/initial-assessment",
-                layout: "month_view",
-                calOrigin: "https://app.cal.eu" // <-- THIS TELLS IT TO USE THE EU SERVER INSTEAD
-            });
-
-            // Applies matching premium dark mode styles natively inside the embed layout frame
-            Cal("ui", {
-                theme: "dark",
-                styles: { branding: { brandColor: "#0284c7" } },
-                hideEventTypeDetails: false,
-                layout: "month_view"
-            });
-        }
 
         async function fetchStudents() {
             try {
