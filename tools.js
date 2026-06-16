@@ -1,33 +1,47 @@
-const { saveBooking, getBookingByDetails, updateBookingStatus, rescheduleBooking, logCall, getBookingByEmail, upsertStudent } = require('./db')
-const { createCalendarEvent, deleteCalendarEvent } = require('./calendar')
+const { 
+  saveBooking, 
+  getBookingByDetails, 
+  updateBookingStatus, 
+  rescheduleBooking, 
+  logCall, 
+  getBookingByEmail, 
+  upsertStudent,
+  getTokens // <-- FIX: Properly imported getTokens helper
+} = require('./db')
+
+const { createCalendarEvent, deleteCalendarEvent, getOAuthClient } = require('./calendar')
 const { sendBookingConfirmation, sendCancellationConfirmation, sendRescheduleConfirmation } = require('./email')
+const { google } = require('googleapis') // <-- FIX: Moved to top level for performance
 
 async function runTool(toolName, params, client) {
   console.log('Running tool:', toolName, 'for client:', client.business_name)
 
-  // Establish live authentication token configuration using environment variables
-  // ✅ PASTE THIS LIVE DATABASE TOKEN LOOKUP INSTEAD:
-let tokens;
-try {
-  // This uses your db.js helper to grab the active tokens you just authorized
-  tokens = await getBookingByDetails.getTokens ? await getTokens(client.id) : {
-    access_token: process.env.GOOGLE_ACCESS_TOKEN,
-    refresh_token: process.env.GOOGLE_REFRESH_TOKEN
-  };
-} catch (tokenErr) {
-  console.error("Database token fetch failed, falling back to env:", tokenErr.message);
-  tokens = {
-    access_token: process.env.GOOGLE_ACCESS_TOKEN,
-    refresh_token: process.env.GOOGLE_REFRESH_TOKEN
-  };
-}
+  // Establish live authentication token configuration securely
+  let tokens;
+  try {
+    // FIX: Cleaned up the check to see if getTokens is exported and available
+    if (typeof getTokens === 'function') {
+      tokens = await getTokens(client.id);
+    } else {
+      tokens = {
+        access_token: process.env.GOOGLE_ACCESS_TOKEN,
+        refresh_token: process.env.GOOGLE_REFRESH_TOKEN
+      };
+    }
+  } catch (tokenErr) {
+    console.error("Database token fetch failed, falling back to env variables:", tokenErr.message);
+    tokens = {
+      access_token: process.env.GOOGLE_ACCESS_TOKEN,
+      refresh_token: process.env.GOOGLE_REFRESH_TOKEN
+    };
+  }
 
+  // --- GET AVAILABILITY ---
   if (toolName === 'get_availability') {
     try {
       return await getAvailabilityFromCalendar(params.date, tokens)
     } catch (err) {
       console.error('Calendar availability error:', err.message)
-      // Fallback slot array if Google API encounters local operational blocks
       return {
         available: true,
         slots: ['9:00am', '11:00am', '2:00pm', '4:00pm'],
@@ -37,7 +51,8 @@ try {
     }
   }
 
-if (toolName === 'create_booking') {
+  // --- CREATE BOOKING ---
+  if (toolName === 'create_booking') {
     console.log('CREATE BOOKING PARAMS:', JSON.stringify(params))
     
     let calendarEventId = null
@@ -48,7 +63,7 @@ if (toolName === 'create_booking') {
       const calendarEvent = await createCalendarEvent(tokens, {
         caller_name: params.caller_name,
         caller_phone: params.caller_phone,
-        property_address: params.property_address, // Maps structural parameter reference to pickup address
+        property_address: params.property_address,
         date: params.date,
         time: params.time
       })
@@ -58,14 +73,14 @@ if (toolName === 'create_booking') {
       console.error('Live Google Calendar Insertion Error:', err.message)
     }
 
-    // NEW: Send the newly booked student straight to your unified dashboard table
+    // Send the newly booked student straight to your unified dashboard table
     try {
       await upsertStudent({
         name: params.caller_name,
         phone: params.caller_phone || "Unknown Phone",
         transmission: params.transmission_type,
         address: params.property_address,
-        source: 'call' // Tags them as a phone lead on your dashboard
+        source: 'call'
       })
       console.log(`Successfully synced student ${params.caller_name} to dashboard table.`)
     } catch (dbErr) {
@@ -75,7 +90,7 @@ if (toolName === 'create_booking') {
     // Generate real distinct booking ID string from the Google Resource Event ID block
     const uniqueRefId = calendarEventId ? `REFL-${calendarEventId.substring(0, 6).toUpperCase()}` : `REFL-${Math.floor(Math.random() * 10000)}`
 
-    // Log tracking transaction details down to persistent database tier
+    // FIX: Added 'await' so transaction completes natively before returning to Vapi
     await saveBooking({
       client_id: client.id,
       caller_name: params.caller_name,
@@ -90,12 +105,14 @@ if (toolName === 'create_booking') {
       calendar_event_id: calendarEventId
     }).catch(err => console.error('Database preservation crash:', err.message))
 
-    logCall({
+    // FIX: Added 'await' to ensure the audit log records safely
+    await logCall({
       client_id: client.id,
       caller_name: params.caller_name,
       caller_phone: params.caller_phone,
       action: 'booked',
-      notes: `Driving lesson slot initialized for ${params.caller_name} at pickup location: ${params.property_address} on ${params.date} at ${params.time}`
+      notes: `Driving lesson slot initialized for ${params.caller_name} at pickup location: ${params.property_address} on ${params.date} at ${params.time}`,
+      booking_id: uniqueRefId
     }).catch(err => console.error('Operational call log failure:', err.message))
 
     if (client.send_email_confirmation && params.caller_email) {
@@ -121,6 +138,7 @@ if (toolName === 'create_booking') {
     }
   }
 
+  // --- CANCEL BOOKING ---
   if (toolName === 'cancel_booking') {
     console.log('CANCEL BOOKING PARAMS:', JSON.stringify(params))
 
@@ -132,7 +150,7 @@ if (toolName === 'create_booking') {
     )
 
     if (!booking) {
-      logCall({
+      await logCall({
         client_id: client.id,
         caller_name: params.caller_name,
         caller_phone: params.caller_phone,
@@ -153,13 +171,13 @@ if (toolName === 'create_booking') {
         .catch(err => console.error('Live Calendar elimination routine failure:', err.message))
     }
 
-    logCall({
+    await logCall({
       client_id: client.id,
       caller_name: booking.caller_name,
       caller_phone: booking.caller_phone,
       action: 'cancelled',
       notes: `Driving Lesson at ${booking.property_address} on ${booking.date} at ${booking.time} has been wiped out.`,
-      booking_id: booking.id
+      booking_id: booking.booking_ref
     }).catch(err => console.error('Log framework error:', err.message))
 
     return {
@@ -168,6 +186,7 @@ if (toolName === 'create_booking') {
     }
   }
 
+  // --- RESCHEDULE BOOKING ---
   if (toolName === 'reschedule_booking') {
     console.log('RESCHEDULE BOOKING PARAMS:', JSON.stringify(params))
 
@@ -212,6 +231,7 @@ if (toolName === 'create_booking') {
     }
   }
 
+  // --- CONFIRM BOOKING ---
   if (toolName === 'confirm_booking') {
     console.log('CONFIRM BOOKING PARAMS:', JSON.stringify(params))
 
@@ -233,10 +253,8 @@ if (toolName === 'create_booking') {
   throw new Error('Unknown tool: ' + toolName)
 }
 
+// --- CALENDAR ENGINE INTEGRATION ---
 async function getAvailabilityFromCalendar(date, tokens) {
-  const { google } = require('googleapis')
-  const { getOAuthClient } = require('./calendar')
-
   const oauth2Client = getOAuthClient()
   oauth2Client.setCredentials(tokens)
 
@@ -245,7 +263,6 @@ async function getAvailabilityFromCalendar(date, tokens) {
   const startOfDay = new Date(`${date}T00:00:00Z`)
   const endOfDay = new Date(`${date}T23:59:59Z`)
 
-  // References variable target calendar ID string configuration dynamically
   const response = await calendar.events.list({
     calendarId: process.env.GOOGLE_CALENDAR_ID || 'primary',
     timeMin: startOfDay.toISOString(),
