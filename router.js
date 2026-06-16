@@ -1,27 +1,6 @@
-const { getClientByAssistantId } = require('./db'); 
+const { getClientByAssistantId, supabase } = require('./db'); 
 const { runTool } = require('./tools');
 const { handleIncomingWhatsApp, sendWhatsAppText } = require('./whatsapp'); 
-
-// --- SAFE SUPABASE INITIALIZATION ENGINE ---
-let supabase;
-try {
-  // Attempt to import it from your db file first
-  const dbExports = require('./db');
-  supabase = dbExports.supabase || dbExports; 
-} catch (e) {
-  console.log('⚠️ Router could not auto-resolve db.js exports, applying manual initialization fallback.');
-}
-
-// Fallback: If it is still undefined, construct it natively from your active environment variables
-if (!supabase || typeof supabase.from !== 'function') {
-  const { createClient } = require('@supabase/supabase-client');
-  if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
-    supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
-  } else {
-    console.error('❌ CRITICAL ERROR: Supabase environment variables are missing from your Railway configuration!');
-  }
-}
-// -------------------------------------------
 
 async function routeToolCall(body) {
   console.log('BODY:', JSON.stringify(body))
@@ -64,7 +43,8 @@ async function handleWhatsAppWebhook(req, res) {
 async function getStudents(req, res) {
   try {
     if (!supabase || typeof supabase.from !== 'function') {
-      throw new Error('Supabase client client is uninitialized or broken.');
+      console.error('❌ Supabase client export missing from db.js');
+      return res.status(500).json([]);
     }
 
     const { data, error } = await supabase
@@ -90,7 +70,7 @@ async function updateStudent(req, res) {
     const updates = req.body; // e.g. { theory_passed: true }
 
     if (!supabase || typeof supabase.from !== 'function') {
-      throw new Error('Supabase client is uninitialized or broken.');
+      return res.status(500).json({ error: 'Supabase client is uninitialized.' });
     }
 
     const { data, error } = await supabase
@@ -114,7 +94,7 @@ async function broadcastMessage(req, res) {
     if (!message) return res.status(400).json({ error: 'Message content is required.' });
 
     if (!supabase || typeof supabase.from !== 'function') {
-      throw new Error('Supabase client is uninitialized or broken.');
+      return res.status(500).json({ error: 'Supabase client is uninitialized.' });
     }
 
     // Grab only active students who have valid phone numbers
