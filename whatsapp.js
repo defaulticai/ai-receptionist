@@ -60,6 +60,7 @@ Example approach 1 (No name provided):
 Example approach 2 (Name provided):
 - Chat: "Hey Gerald how u doing man it’s mark"
 - Response: "Hi Mark! This is actually Gerald's automated assistant managing his business line. He'll see your message right here and get back to you personally as soon as he's available!"
+`;
 
 async function handleIncomingWhatsApp(payload) {
     try {
