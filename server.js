@@ -80,17 +80,26 @@ app.post('/webhooks/whatsapp', handleWhatsAppWebhook)
 app.get('/api/students', getStudents);
 app.patch('/api/students/:id', updateStudent);
 
-// Fixed: Clean architecture handling without causing inline arrow syntax error bugs
+// Fixed: Robust extraction logic to capture the Supabase client instance safely
 app.post('/api/students', async (req, res) => {
-    // If router exports a custom handler, delegate directly to it
     if (typeof createStudent === 'function') {
         return createStudent(req, res);
     }
     
-    // Otherwise, perform the direct inline database insertion fallback safely
     try {
         const { name, phone } = req.body;
-        const { data, error } = await require('./supabaseClient').supabase
+        
+        // Import your local module package instance
+        const importedModule = require('./supabaseClient');
+        
+        // Check if it's exported directly or wrapped inside an object property key
+        const supabase = importedModule.supabase || importedModule;
+        
+        if (!supabase || typeof supabase.from !== 'function') {
+            throw new Error("Could not find a valid initialized Supabase instance inside './supabaseClient'. Check exports inside that file.");
+        }
+
+        const { data, error } = await supabase
             .from('students')
             .insert([{ 
                 name, 
@@ -104,7 +113,7 @@ app.post('/api/students', async (req, res) => {
         if (error) throw error;
         res.status(201).json({ success: true, data });
     } catch(err) {
-        console.error('Error creating user profile node inside database stub:', err);
+        console.error('Database Operation Error:', err.message);
         res.status(500).json({ error: err.message });
     }
 });
