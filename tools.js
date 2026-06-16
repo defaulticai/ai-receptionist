@@ -6,10 +6,21 @@ async function runTool(toolName, params, client) {
   console.log('Running tool:', toolName, 'for client:', client.business_name)
 
   // Establish live authentication token configuration using environment variables
-  const tokens = {
+  // ✅ PASTE THIS LIVE DATABASE TOKEN LOOKUP INSTEAD:
+let tokens;
+try {
+  // This uses your db.js helper to grab the active tokens you just authorized
+  tokens = await getBookingByDetails.getTokens ? await getTokens(client.id) : {
     access_token: process.env.GOOGLE_ACCESS_TOKEN,
     refresh_token: process.env.GOOGLE_REFRESH_TOKEN
-  }
+  };
+} catch (tokenErr) {
+  console.error("Database token fetch failed, falling back to env:", tokenErr.message);
+  tokens = {
+    access_token: process.env.GOOGLE_ACCESS_TOKEN,
+    refresh_token: process.env.GOOGLE_REFRESH_TOKEN
+  };
+}
 
   if (toolName === 'get_availability') {
     try {
