@@ -1,6 +1,6 @@
 const express = require('express')
 const basicAuth = require('express-basic-auth') // Added security package
-const { routeToolCall, handleWhatsAppWebhook, getStudents, updateStudent, createStudent } = require('./router')
+const { routeToolCall, handleWhatsAppWebhook, getStudents, updateStudent } = require('./router')
 const { sendWhatsAppText } = require('./whatsapp')
 const { getAuthUrl } = require('./calendar')
 const { google } = require('googleapis')
@@ -19,6 +19,9 @@ const geraldProtector = basicAuth({
 
 // Serve static assets from public safely behind basic authentication credentials
 app.use('/dashboard', geraldProtector, express.static('public', { index: 'dashboard.html' }));
+
+// Local in-memory storage array for tracking dashboard-only students
+let localDashboardStudents = [];
 
 // Helper function to convert robotic timestamps into a friendly human format
 function formatHumanDateTime(isoString) {
@@ -76,47 +79,56 @@ app.post('/tool-call', async (req, res) => {
 // Webhook / API Endpoints
 app.post('/webhooks/whatsapp', handleWhatsAppWebhook)
 
-// These APIs handle data exchange for the dashboard table behind the scenes
-app.get('/api/students', getStudents);
-app.patch('/api/students/:id', updateStudent);
+// --- DASHBOARD MEMORY HANDLERS ---
 
-// Fixed: Robust extraction logic to capture the Supabase client instance safely
-app.post('/api/students', async (req, res) => {
-    if (typeof createStudent === 'function') {
-        return createStudent(req, res);
-    }
-    
+// Returns the local runtime student list to feed the tracking UI
+app.get('/api/students', (req, res) => {
+    res.json(localDashboardStudents);
+});
+
+// Appends manually entered profiles instantly to local memory loop
+app.post('/api/students', (req, res) => {
     try {
         const { name, phone } = req.body;
         
-        // Import your local module package instance
-        const importedModule = require('./supabaseClient');
-        
-        // Check if it's exported directly or wrapped inside an object property key
-        const supabase = importedModule.supabase || importedModule;
-        
-        if (!supabase || typeof supabase.from !== 'function') {
-            throw new Error("Could not find a valid initialized Supabase instance inside './supabaseClient'. Check exports inside that file.");
-        }
+        const newStudent = {
+            id: 'local_' + Date.now(),
+            name: name,
+            phone: phone,
+            driving_status: 'not_started',
+            theory_passed: false,
+            payment_status: 'Paid',
+            test_date: 'None Assigned'
+        };
 
-        const { data, error } = await supabase
-            .from('students')
-            .insert([{ 
-                name, 
-                phone, 
-                driving_status: 'not_started', 
-                theory_passed: false, 
-                payment_status: 'Paid',
-                test_date: 'None Assigned'
-            }]);
-            
-        if (error) throw error;
-        res.status(201).json({ success: true, data });
+        localDashboardStudents.push(newStudent);
+        console.log(`Successfully added student to local dashboard memory: ${name}`);
+        res.status(201).json(newStudent);
     } catch(err) {
-        console.error('Database Operation Error:', err.message);
+        console.error('Local memory storage error:', err.message);
         res.status(500).json({ error: err.message });
     }
 });
+
+// Handles field toggles and dropdown edits within the frontend table row matrices
+app.patch('/api/students/:id', (req, res) => {
+    try {
+        const { id } = req.params;
+        const updates = req.body;
+        
+        const index = localDashboardStudents.findIndex(s => s.id === id);
+        if (index !== -1) {
+            localDashboardStudents[index] = { ...localDashboardStudents[index], ...updates };
+            return res.json({ success: true, data: localDashboardStudents[index] });
+        }
+        
+        res.status(404).json({ error: "Student profile index location not found." });
+    } catch(err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ---------------------------------
 
 app.get('/', (req, res) => {
   res.json({ status: 'AI Receptionist server is running' })
