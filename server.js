@@ -58,6 +58,32 @@ app.get('/auth/google/callback', async (req, res) => {
   }
 })
 
+app.post('/webhook', async (req, res) => {
+    const booking = req.body;
+
+    // Check if this is a "booking created" event
+    if (booking.triggerEvent === 'BOOKING_CREATED') {
+        const payload = booking.payload;
+        
+        // Extract student details
+        const studentName = payload.attendees[0].name;
+        const studentEmail = payload.attendees[0].email;
+        const startTime = new Date(payload.startTime).toLocaleString('en-GB', { timeZone: 'Europe/London' });
+        
+        // Extract custom fields (Phone and Address)
+        const phoneField = payload.responses?.phone || '';
+        const addressField = payload.responses?.address?.value || payload.responses?.address || 'Not provided';
+
+        console.log(`New Booking Received! Name: ${studentName}, Phone: ${phoneField}, Address: ${addressField}`);
+
+        // TODO: Call your WhatsApp sending function here to text the student
+        // example: sendWhatsApp(phoneField, `Hi ${studentName}, your driving lesson is confirmed for ${startTime}!`);
+    }
+
+    // Always respond with a 200 OK so Cal.com knows we received it
+    res.status(200).send('Webhook received');
+});
+
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
