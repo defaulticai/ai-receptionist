@@ -23,12 +23,14 @@ async function createCalendarEvent(tokens, booking) {
 
   const calendar = google.calendar({ version: 'v3', auth: oauth2Client })
 
+  // Converted from 60 minutes to 120 minutes (2-hour lesson blocks for driving school)
   const startDateTime = new Date(`${booking.date}T${convertTo24Hour(booking.time)}:00`)
-  const endDateTime = new Date(startDateTime.getTime() + 60 * 60 * 1000)
+  const endDateTime = new Date(startDateTime.getTime() + 120 * 60 * 1000)
 
+  // Custom tailored summary and details to fit Gerald's driving lessons
   const event = {
-    summary: `Property Viewing — ${booking.property_address}`,
-    description: `Caller: ${booking.caller_name}\n${booking.caller_phone ? 'Phone: ' + booking.caller_phone : ''}${booking.caller_email ? '\nEmail: ' + booking.caller_email : ''}\nBooked via AI Receptionist`,
+    summary: `Driving Lesson — ${booking.caller_name}`,
+    description: `Student: ${booking.caller_name}\n${booking.caller_phone ? 'Phone: ' + booking.caller_phone : ''}${booking.caller_email ? '\nEmail: ' + booking.caller_email : ''}\nPickup Location: ${booking.property_address}\nBooked via AI Receptionist`,
     start: {
       dateTime: startDateTime.toISOString(),
       timeZone: 'Europe/London'
@@ -39,8 +41,9 @@ async function createCalendarEvent(tokens, booking) {
     }
   }
 
+  // Uses GOOGLE_CALENDAR_ID variable from Railway, otherwise defaults to 'primary'
   const response = await calendar.events.insert({
-    calendarId: 'primary',
+    calendarId: process.env.GOOGLE_CALENDAR_ID || 'primary',
     resource: event
   })
 
@@ -54,8 +57,9 @@ async function deleteCalendarEvent(tokens, eventId) {
 
   const calendar = google.calendar({ version: 'v3', auth: oauth2Client })
 
+  // Uses GOOGLE_CALENDAR_ID variable from Railway, otherwise defaults to 'primary'
   await calendar.events.delete({
-    calendarId: 'primary',
+    calendarId: process.env.GOOGLE_CALENDAR_ID || 'primary',
     eventId: eventId
   })
 
