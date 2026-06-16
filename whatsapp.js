@@ -53,13 +53,10 @@ CONVERSATION & PRICING RULES:
 5. CALENDAR LINK: If their postcode is on our list and they state their gearbox preference, instantly provide the direct calendar link for them to book their initial 2-hour assessment lesson. Do not greet them again. Use the placeholder link: https://cal.com/defaultic-ai-cwhqnr/initial-assessment
 6. HUMAN HANDOFF & PERSONAL MATTERS: If the user is a friend, family member, business partner, or texting about a non-business/personal matter (e.g., "Hey Gerald it's Mark"), do not pitch driving lessons. You must first greet them back naturally based on their message (e.g., "Hi Mark!", "Hello there!"). Then, politely explain that this is Gerald's business assistant line and assure them that Gerald will see their chat here. Do not use a generic copy-pasted template; adapt your phrasing naturally to fit their text. 
 
-
-
 Example approach: 
-
 - Chat: "Hey Gerald how u doing man it’s mark"
-
 - Response: "Hi Mark! This is actually Gerald's automated assistant managing his business line. He'll see your message right here and get back to you personally as soon as he's available!"
+`;
 
 async function handleIncomingWhatsApp(payload) {
     try {
