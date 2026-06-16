@@ -134,6 +134,7 @@ async function getBookingByEmail(callerEmail) {
 }
 
 module.exports = { 
+  supabase,
   getClientByAssistantId, 
   logCall, 
   saveBooking, 
