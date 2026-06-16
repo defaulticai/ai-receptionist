@@ -133,6 +133,42 @@ async function getBookingByEmail(callerEmail) {
   return data
 }
 
+async function upsertStudent({ name, phone, transmission, address, source }) {
+  // Check if the student already exists by their phone number
+  const { data: existingStudent, error: fetchError } = await supabase
+    .from('students')
+    .select('*')
+    .eq('student_phone', phone)
+    .single();
+
+  if (existingStudent) {
+    // If they already exist, bump their lesson count up by 1
+    const { data, error } = await supabase
+      .from('students')
+      .update({ total_lessons_booked: existingStudent.total_lessons_booked + 1 })
+      .eq('id', existingStudent.id)
+      .select();
+    return data;
+  } else {
+    // If they are brand new, create their dashboard profile
+    const { data, error } = await supabase
+      .from('students')
+      .insert([
+        {
+          student_name: name,
+          student_phone: phone,
+          transmission_type: transmission || 'manual',
+          pickup_address: address,
+          total_lessons_booked: 1,
+          booking_source: source, // Saves 'call' or 'whatsapp'
+          status: 'active'
+        }
+      ])
+      .select();
+    return data;
+  }
+}
+
 module.exports = { 
   supabase,
   getClientByAssistantId, 
@@ -141,5 +177,6 @@ module.exports = {
   getBookingByDetails, 
   updateBookingStatus,
   rescheduleBooking,
-  getBookingByEmail
+  getBookingByEmail,
+  upsertStudent
 }
