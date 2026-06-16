@@ -30,7 +30,6 @@
             background-color: #09090b;
             font-family: 'Plus Jakarta Sans', sans-serif;
         }
-        /* Custom smooth scrollbar for table and calendar grids */
         ::-webkit-scrollbar {
             width: 4px;
             height: 4px;
@@ -63,7 +62,12 @@
             <div class="bg-obsidian border border-borderCharcoal rounded-2xl p-6 shadow-2xl">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div>
-                        <h2 class="text-base font-semibold text-white tracking-wide">Active Pupils</h2>
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-base font-semibold text-white tracking-wide">Active Pupils</h2>
+                            <button onclick="openModal()" class="w-5 h-5 rounded-md bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 flex items-center justify-center text-purple-400 text-xs transition-all active:scale-95" title="Add Pupil">
+                                ＋
+                            </button>
+                        </div>
                         <p class="text-[11px] text-mutedZinc font-light mt-0.5">Real-time client synchronization matrix</p>
                     </div>
                     <input 
@@ -123,8 +127,11 @@
                         <h2 class="text-base font-semibold text-white tracking-wide">Integrated Booking Diary</h2>
                         <p class="text-[11px] text-mutedZinc font-light mt-0.5">Natively styled dashboard timetable slots</p>
                     </div>
-                    <div class="flex items-center gap-2 bg-void border border-borderCharcoal rounded-xl px-3 py-1.5 text-[11px]">
-                        <span class="text-white font-medium">June 2026</span>
+                    
+                    <div class="flex items-center gap-2 bg-void border border-borderCharcoal rounded-xl p-1 text-[11px]">
+                        <button onclick="changeMonth(-1)" class="w-6 h-6 rounded-lg hover:bg-obsidian border border-transparent hover:border-borderCharcoal flex items-center justify-center text-mutedZinc hover:text-white transition-all">◀</button>
+                        <span id="calendarHeading" class="text-white font-medium px-2">June 2026</span>
+                        <button onclick="changeMonth(1)" class="w-6 h-6 rounded-lg hover:bg-obsidian border border-transparent hover:border-borderCharcoal flex items-center justify-center text-mutedZinc hover:text-white transition-all">▶</button>
                     </div>
                 </div>
                 
@@ -133,71 +140,12 @@
                         <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
                     </div>
                     
-                    <div class="grid grid-cols-7 gap-2 text-xs">
-                        <div class="p-3 text-zinc-800 font-light text-center">25</div>
-                        <div class="p-3 text-zinc-800 font-light text-center">26</div>
-                        <div class="p-3 text-zinc-800 font-light text-center">27</div>
-                        <div class="p-3 text-zinc-800 font-light text-center">28</div>
-                        <div class="p-3 text-zinc-800 font-light text-center">29</div>
-                        <div class="p-3 text-zinc-800 font-light text-center">30</div>
-                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">1</div>
-                        
-                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">2</div>
-                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">3</div>
-                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">4</div>
-                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">5</div>
-                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">6</div>
-                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">7</div>
-                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">8</div>
-                        
-                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">9</div>
-                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">10</div>
-                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">11</div>
-                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">12</div>
-                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">13</div>
-                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">14</div>
-                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">15</div>
-                        
-                        <div class="p-3 rounded-xl border border-purple-500/30 bg-purple-500/10 text-purple-400 font-semibold text-center transition-all cursor-pointer ring-1 ring-purple-500/20 relative shadow-inner">
-                            16
-                            <span class="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-purple-400 rounded-full"></span>
-                        </div>
-                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer relative">
-                            17
-                            <span class="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-purple-400/50 rounded-full"></span>
-                        </div>
-                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">18</div>
-                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer relative">
-                            19
-                            <span class="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-purple-400/50 rounded-full"></span>
-                        </div>
-                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">20</div>
-                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">21</div>
-                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">22</div>
-
-                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">23</div>
-                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">24</div>
-                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">25</div>
-                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">26</div>
-                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">27</div>
-                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">28</div>
-                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">29</div>
-                    </div>
+                    <div id="calendarDaysGrid" class="grid grid-cols-7 gap-2 text-xs"></div>
                 </div>
 
-                <div class="mt-6 space-y-3">
-                    <h3 class="text-xs font-semibold uppercase tracking-widest text-mutedZinc mb-2">Today's Scheduled Operations</h3>
-                    
-                    <div class="flex justify-between items-center p-3.5 rounded-xl bg-void border border-borderCharcoal hover:border-zinc-800 transition-all">
-                        <div class="flex items-center gap-3">
-                            <div class="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
-                            <div>
-                                <h4 class="text-xs font-medium text-white">John Doe - Initial Assessment</h4>
-                                <p class="text-[10px] text-mutedZinc font-light mt-0.5">Pick up: Ashford International Station</p>
-                            </div>
-                        </div>
-                        <span class="text-[10px] text-purple-400 font-medium bg-purple-500/10 border border-purple-500/20 px-2 py-1 rounded-md">12:00 - 13:00</span>
-                    </div>
+                <div class="mt-6">
+                    <h3 id="agendaHeader" class="text-xs font-semibold uppercase tracking-widest text-mutedZinc mb-3">Scheduled Operations</h3>
+                    <div id="agendaFeedContainer" class="space-y-3"></div>
                 </div>
 
             </div>
@@ -205,12 +153,198 @@
 
     </div>
 
+    <div id="studentModal" class="fixed inset-0 bg-void/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4 transition-all">
+        <div class="bg-obsidian border border-borderCharcoal rounded-2xl w-full max-w-sm p-6 shadow-2xl relative">
+            <div class="mb-5">
+                <h3 class="text-base font-semibold text-white tracking-wide">Add New Student</h3>
+                <p class="text-[11px] text-mutedZinc font-light mt-0.5">Inject an active pupil node down into Supabase storage</p>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-[10px] text-mutedZinc font-medium uppercase tracking-wider mb-1.5">Full Name</label>
+                    <input type="text" id="modalStudentName" placeholder="e.g. John Doe" class="w-full bg-void border border-borderCharcoal rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500/50 placeholder-zinc-600" />
+                </div>
+                <div>
+                    <label class="block text-[10px] text-mutedZinc font-medium uppercase tracking-wider mb-1.5">Phone Number</label>
+                    <input type="text" id="modalStudentPhone" placeholder="e.g. +44 7824012557" class="w-full bg-void border border-borderCharcoal rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500/50 placeholder-zinc-600" />
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 mt-6 border-t border-borderCharcoal pt-4">
+                <button onclick="closeModal()" class="px-4 py-2 rounded-xl text-xs font-medium text-mutedZinc hover:text-white bg-transparent border border-transparent hover:border-borderCharcoal transition-all">
+                    Cancel
+                </button>
+                <button onclick="saveStudent()" class="px-4 py-2 rounded-xl text-xs font-medium bg-purple-600 text-white hover:bg-purple-500 transition-all shadow-lg shadow-purple-600/10">
+                    Save Student
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let allStudents = [];
+        
+        // Setup initial execution context state matching June 2026
+        let currentYear = 2026;
+        let currentMonth = 5; // 0-Indexed base value (0 = January, 5 = June)
+        let selectedDateKey = "2026-06-16"; // Pre-highlight starting operational focus
+
+        // Seeded Mock Booking Framework Registry keyed to dynamic system queries
+        const agendaRegistry = {
+            "2026-06-15": [{ name: "Sarah Jenkins", type: "Hazard Perception Prep", time: "09:00 - 11:00", location: "Canterbury Center" }],
+            "2026-06-16": [{ name: "John Doe", type: "Initial Assessment Check", time: "12:00 - 13:00", location: "Ashford International Station" }],
+            "2026-06-19": [{ name: "Alex Mercer", type: "Mock Practical Exam Pass Flight", time: "14:30 - 16:30", location: "Folkestone Grid" }],
+            "2026-06-24": [{ name: "Emily Watson", type: "Maneuver Execution Drill", time: "10:00 - 12:00", location: "Maidstone Bypass" }]
+        };
+
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
         document.addEventListener('DOMContentLoaded', () => {
             fetchStudents();
+            renderCalendar();
         });
+
+        // Modal Form Node State Triggers
+        function openModal() {
+            document.getElementById('studentModal').style.display = 'flex';
+        }
+        function closeModal() {
+            document.getElementById('studentModal').style.display = 'none';
+            document.getElementById('modalStudentName').value = '';
+            document.getElementById('modalStudentPhone').value = '';
+        }
+
+        async function saveStudent() {
+            const name = document.getElementById('modalStudentName').value.trim();
+            const phone = document.getElementById('modalStudentPhone').value.trim();
+
+            if (!name || !phone) return alert("Validation failed: All form elements must be populated.");
+
+            try {
+                const response = await fetch('/api/students', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, phone, driving_status: 'not_started', theory_passed: false, payment_status: 'Paid' })
+                });
+
+                if (response.ok) {
+                    closeModal();
+                    fetchStudents(); // Pull active table view updates
+                } else {
+                    alert("Database link rejected student ingestion blueprint pipeline.");
+                }
+            } catch (err) {
+                alert("Critical network failure executing student data synchronization.");
+            }
+        }
+
+        // Native Calendar Computation Vector Loop Engine
+        function renderCalendar() {
+            const heading = document.getElementById('calendarHeading');
+            const grid = document.getElementById('calendarDaysGrid');
+            
+            heading.innerText = `${monthNames[currentMonth]} ${currentYear}`;
+            grid.innerHTML = '';
+
+            // Map current offset positions
+            const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
+            const adjustedFirstDay = firstDayIndex === 0 ? 6 : firstDayIndex - 1; // Sync layout to Monday
+            const totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const prevMonthTotalDays = new Date(currentYear, currentMonth, 0).getDate();
+
+            // 1. Draw Previous Month Tail Offsets
+            for (let i = adjustedFirstDay - 1; i >= 0; i--) {
+                const placeholderDay = prevMonthTotalDays - i;
+                const cell = document.createElement('div');
+                cell.className = "p-3 text-zinc-800 font-light text-center select-none";
+                cell.innerText = placeholderDay;
+                grid.appendChild(cell);
+            }
+
+            // 2. Draw Live Month Date Cells Loop
+            for (let day = 1; day <= totalDays; day++) {
+                const formattedMonth = String(currentMonth + 1).padStart(2, '0');
+                const formattedDay = String(day).padStart(2, '0');
+                const dateKey = `${currentYear}-${formattedMonth}-${formattedDay}`;
+                
+                const cell = document.createElement('div');
+                cell.innerText = day;
+                
+                // Base structure rendering logic elements
+                let baseStyles = "p-3 rounded-xl text-center font-light cursor-pointer transition-all relative border ";
+                
+                if (dateKey === selectedDateKey) {
+                    baseStyles += "border-purple-500/40 bg-purple-500/10 text-purple-400 font-semibold ring-1 ring-purple-500/20 shadow-inner";
+                } else {
+                    baseStyles += "border-transparent text-zinc-400 hover:border-borderCharcoal hover:text-white";
+                }
+                
+                cell.className = baseStyles;
+
+                // If scheduled events exist inside static context block, attach structural indicators
+                if (agendaRegistry[dateKey]) {
+                    const indicator = document.createElement('span');
+                    indicator.className = `absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${dateKey === selectedDateKey ? 'bg-purple-400' : 'bg-purple-500/40'}`;
+                    cell.appendChild(indicator);
+                }
+
+                cell.onclick = () => {
+                    selectedDateKey = dateKey;
+                    renderCalendar(); // Apply visual highlight states dynamically
+                };
+
+                grid.appendChild(cell);
+            }
+
+            updateAgendaView();
+        }
+
+        function changeMonth(direction) {
+            currentMonth += direction;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            } else if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            renderCalendar();
+        }
+
+        function updateAgendaView() {
+            const feedContainer = document.getElementById('agendaFeedContainer');
+            const header = document.getElementById('agendaHeader');
+            
+            // Format dynamic localized display title tracking context
+            const [y, m, d] = selectedDateKey.split('-');
+            header.innerText = `Agenda Log: ${d}/${m}/${y}`;
+            feedContainer.innerHTML = '';
+
+            const events = agendaRegistry[selectedDateKey];
+
+            if (!events || events.length === 0) {
+                feedContainer.innerHTML = `
+                    <div class="text-center py-6 border border-dashed border-borderCharcoal rounded-xl text-zinc-600 font-light text-xs">
+                        No operational bookings synchronized to this index point.
+                    </div>`;
+                return;
+            }
+
+            events.forEach(ev => {
+                feedContainer.innerHTML += `
+                    <div class="flex justify-between items-center p-3.5 rounded-xl bg-void border border-borderCharcoal hover:border-zinc-800 transition-all">
+                        <div class="flex items-center gap-3">
+                            <div class="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
+                            <div>
+                                <h4 class="text-xs font-medium text-white">${ev.name} - ${ev.type}</h4>
+                                <p class="text-[10px] text-mutedZinc font-light mt-0.5">Location: ${ev.location}</p>
+                            </div>
+                        </div>
+                        <span class="text-[10px] text-purple-400 font-medium bg-purple-500/10 border border-purple-500/20 px-2 py-1 rounded-md whitespace-nowrap">${ev.time}</span>
+                    </div>`;
+            });
+        }
 
         async function fetchStudents() {
             try {
@@ -250,13 +384,6 @@
                 if (rawPhone !== undefined && rawPhone !== null) {
                     displayPhone = rawPhone.toString().trim();
                 }
-
-                // Elegant dynamic styles for custom premium badges instead of native form widgets
-                const progressColorClass = drivingStatus === 'passed' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                                           drivingStatus === 'learning' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 
-                                           'bg-zinc-500/10 text-zinc-400 border-zinc-500/20';
-
-                const paymentColorClass = paymentStatus === 'Paid' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20';
 
                 return `
                 <tr class="hover:bg-void/40 transition-all group">
@@ -310,7 +437,6 @@
                 if (index !== -1) {
                     allStudents[index][field] = value;
                 }
-                // Refresh template context weights smoothly
                 fetchStudents();
             } catch (err) {
                 alert("Failed to commit data modification update sequence down to database server.");
