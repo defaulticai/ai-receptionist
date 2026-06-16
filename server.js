@@ -3,6 +3,7 @@ const basicAuth = require('express-basic-auth') // Added security package
 const { routeToolCall, handleWhatsAppWebhook, getStudents, updateStudent } = require('./router')
 const { sendWhatsAppText } = require('./whatsapp')
 const { getAuthUrl } = require('./calendar')
+const fs = require('fs');
 const { google } = require('googleapis')
 require('dotenv').config()
 
@@ -145,8 +146,14 @@ app.get('/auth/google/callback', async (req, res) => {
     const { getOAuthClient } = require('./calendar')
     const oauth2Client = getOAuthClient()
     const { tokens } = await oauth2Client.getToken(code)
-    console.log('GOOGLE TOKENS:', JSON.stringify(tokens))
-    res.send('Connected! Check Railway logs for your tokens.')
+    
+    console.log('GOOGLE TOKENS RECEIVED:', JSON.stringify(tokens))
+    
+    // 💾 SAVE TOKENS TO A LOCAL FILE SO THE SERVER CAN USE THEM LATER
+    fs.writeFileSync('./tokens.json', JSON.stringify(tokens, null, 2));
+    console.log('Tokens successfully saved to tokens.json');
+    
+    res.send('Connected! Your calendar is now linked. You can close this tab and refresh your dashboard.');
   } catch (err) {
     console.error('Auth error:', err.message)
     res.send('Error: ' + err.message)
