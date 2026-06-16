@@ -1,6 +1,5 @@
 const express = require('express')
 const basicAuth = require('express-basic-auth') // Added security package
-// Added createStudent reference to handle manual dashboard ingestions cleanly
 const { routeToolCall, handleWhatsAppWebhook, getStudents, updateStudent, createStudent } = require('./router')
 const { sendWhatsAppText } = require('./whatsapp')
 const { getAuthUrl } = require('./calendar')
@@ -81,9 +80,14 @@ app.post('/webhooks/whatsapp', handleWhatsAppWebhook)
 app.get('/api/students', getStudents);
 app.patch('/api/students/:id', updateStudent);
 
-// Added missing POST route endpoint handler link to successfully handle dashboard manual student creations
-app.post('/api/students', createStudent || async (req, res) => {
-    // Elegant inline fallback execution in case your router.js doesn't export createStudent yet
+// Fixed: Clean architecture handling without causing inline arrow syntax error bugs
+app.post('/api/students', async (req, res) => {
+    // If router exports a custom handler, delegate directly to it
+    if (typeof createStudent === 'function') {
+        return createStudent(req, res);
+    }
+    
+    // Otherwise, perform the direct inline database insertion fallback safely
     try {
         const { name, phone } = req.body;
         const { data, error } = await require('./supabaseClient').supabase
@@ -96,6 +100,7 @@ app.post('/api/students', createStudent || async (req, res) => {
                 payment_status: 'Paid',
                 test_date: 'None Assigned'
             }]);
+            
         if (error) throw error;
         res.status(201).json({ success: true, data });
     } catch(err) {
