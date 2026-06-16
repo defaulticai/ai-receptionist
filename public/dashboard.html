@@ -5,103 +5,201 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerald Driver Training - Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <style>
-        /* Force the Google Calendar embed container to maintain beautiful structural visibility */
-        .calendar-frame {
-            min-height: 650px;
-            height: 100%;
-            width: 100%;
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        void: '#09090b',
+                        obsidian: '#141417',
+                        borderCharcoal: '#232329',
+                        platinum: '#f4f4f5',
+                        mutedZinc: '#a1a1aa'
+                    }
+                }
+            }
         }
-        /* Ensure the parent grid column block balances layout height scale changes */
-        .lg:col-span-7 {
-            min-height: 750px;
+    </script>
+    <style>
+        body {
+            background-color: #09090b;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        /* Custom smooth scrollbar for table and calendar grids */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #141417;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #232329;
+            border-radius: 99px;
         }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 font-sans min-h-screen p-4 md:p-8">
+<body class="text-platinum min-h-screen p-4 md:p-8 selection:bg-purple-500/30">
 
-    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-5 border-b border-slate-800 gap-4">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center mb-10 pb-6 border-b border-borderCharcoal gap-4">
         <div>
-            <h1 class="text-3xl font-bold tracking-tight text-white">Gerald Driver Training</h1>
-            <p class="text-slate-400 text-sm mt-1">Operational MVP & Client Management Suite</p>
+            <h1 class="text-2xl font-bold tracking-tight text-white">Gerald Driver Training</h1>
+            <p class="text-mutedZinc text-xs mt-1 font-light tracking-wide">Operational MVP & Client Management Suite</p>
         </div>
-        <div class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Live Gateway Connected
+        <div class="bg-purple-500/10 text-purple-400 border border-purple-500/20 px-4 py-2 rounded-full text-xs font-medium flex items-center gap-2 backdrop-blur-md">
+            <span class="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse"></span> Systems Active
         </div>
     </div>
 
-    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
-        <div class="lg:col-span-5 space-y-8">
+        <div class="lg:col-span-5 space-y-6">
             
-            <div class="bg-slate-800/40 border border-slate-800 rounded-2xl p-6 backdrop-blur-md">
+            <div class="bg-obsidian border border-borderCharcoal rounded-2xl p-6 shadow-2xl">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                    <h2 class="text-xl font-bold text-white">👥 Active Pupils</h2>
+                    <div>
+                        <h2 class="text-base font-semibold text-white tracking-wide">Active Pupils</h2>
+                        <p class="text-[11px] text-mutedZinc font-light mt-0.5">Real-time client synchronization matrix</p>
+                    </div>
                     <input 
                         type="text" 
                         id="searchBar"
-                        placeholder="Search student name..." 
-                        class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-blue-500 w-full sm:w-48 text-white text-xs"
+                        placeholder="Search name..." 
+                        class="bg-void border border-borderCharcoal rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-purple-500/50 w-full sm:w-40 placeholder-zinc-600 transition-all"
                     />
                 </div>
 
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="border-b border-slate-700 text-slate-400 text-xs uppercase tracking-wider">
-                                <th class="pb-3 font-medium">Info</th>
-                                <th class="pb-3 font-medium">Progress</th>
-                                <th class="pb-3 font-medium text-center">Theory</th>
-                                <th class="pb-3 font-medium text-right">Payment</th>
+                            <tr class="border-b border-borderCharcoal text-mutedZinc text-[10px] font-medium uppercase tracking-widest">
+                                <th class="pb-3">Info</th>
+                                <th class="pb-3">Progress</th>
+                                <th class="pb-3 text-center">Theory</th>
+                                <th class="pb-3 text-right">Payment</th>
                             </tr>
                         </thead>
-                        <tbody id="studentTableBody" class="divide-y divide-slate-800 text-xs">
+                        <tbody id="studentTableBody" class="divide-y divide-borderCharcoal/50 text-xs">
                             <tr>
-                                <td colspan="4" class="text-center py-8 text-slate-500">Loading records...</td>
+                                <td colspan="4" class="text-center py-8 text-zinc-600 font-light">Parsing live database nodes...</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <div class="bg-slate-800/40 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between backdrop-blur-md h-fit">
-                <div>
-                    <h2 class="text-xl font-bold text-white mb-2">📣 Message Centre</h2>
-                    <p class="text-xs text-slate-400 mb-4">Transmit secure WhatsApp blast notifications to all active students instantly.</p>
-                    
-                    <textarea 
-                        id="broadcastMessage"
-                        rows="4"
-                        placeholder="Type alert details here..."
-                        class="w-full bg-slate-900 border border-slate-700 rounded-xl p-4 text-xs text-slate-100 focus:outline-none focus:border-blue-500 resize-none placeholder-slate-500"
-                    ></textarea>
+            <div class="bg-obsidian border border-borderCharcoal rounded-2xl p-6 shadow-2xl">
+                <div class="mb-4">
+                    <h2 class="text-base font-semibold text-white tracking-wide">Message Centre</h2>
+                    <p class="text-[11px] text-mutedZinc font-light mt-0.5">Instant secure broadcast transmission network</p>
                 </div>
+                
+                <textarea 
+                    id="broadcastMessage"
+                    rows="3"
+                    placeholder="Compose announcement sequence..."
+                    class="w-full bg-void border border-borderCharcoal rounded-xl p-4 text-xs text-white focus:outline-none focus:border-purple-500/50 resize-none placeholder-zinc-600 transition-all"
+                ></textarea>
 
                 <button 
                     id="sendBroadcastBtn"
-                    class="w-full mt-4 font-semibold py-3 rounded-xl text-xs transition-all shadow-md text-white bg-emerald-600 hover:bg-emerald-500 flex justify-center items-center gap-2"
+                    class="w-full mt-4 font-medium py-3 rounded-xl text-xs transition-all tracking-wide text-white bg-purple-600 hover:bg-purple-500 shadow-lg shadow-purple-600/10 active:scale-[0.99]"
                 >
-                    🚀 Send Blast to All Students
+                    Dispatch System Broadcast
                 </button>
             </div>
 
         </div>
 
         <div class="lg:col-span-7">
-            <div class="bg-slate-800/40 border border-slate-800 rounded-2xl p-6 backdrop-blur-md h-full flex flex-col">
-                <div class="mb-4">
-                    <h2 class="text-xl font-bold text-white">📅 Integrated Booking Diary</h2>
-                    <p class="text-xs text-slate-400 mt-1">Live visibility synced directly with your Google Calendar scheduling slots.</p>
+            <div class="bg-obsidian border border-borderCharcoal rounded-2xl p-6 shadow-2xl flex flex-col">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-base font-semibold text-white tracking-wide">Integrated Booking Diary</h2>
+                        <p class="text-[11px] text-mutedZinc font-light mt-0.5">Natively styled dashboard timetable slots</p>
+                    </div>
+                    <div class="flex items-center gap-2 bg-void border border-borderCharcoal rounded-xl px-3 py-1.5 text-[11px]">
+                        <span class="text-white font-medium">June 2026</span>
+                    </div>
                 </div>
                 
-                <iframe 
-                    src="https://calendar.google.com/calendar/embed?src=defaulticai@gmail.com&ctz=Europe%2FLondon&wkst=2&bgcolor=%230f172a&mode=WEEK&showPrint=0&showTabs=1&showCalendars=0" 
-                    style="border: 0" 
-                    class="calendar-frame rounded-xl border border-slate-700 bg-slate-900/40"
-                    frameborder="0" 
-                    scrolling="no"
-                ></iframe>
+                <div class="w-full rounded-xl border border-borderCharcoal bg-void p-4">
+                    <div class="grid grid-cols-7 gap-2 text-center text-[10px] uppercase font-semibold tracking-widest text-mutedZinc mb-4">
+                        <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
+                    </div>
+                    
+                    <div class="grid grid-cols-7 gap-2 text-xs">
+                        <div class="p-3 text-zinc-800 font-light text-center">25</div>
+                        <div class="p-3 text-zinc-800 font-light text-center">26</div>
+                        <div class="p-3 text-zinc-800 font-light text-center">27</div>
+                        <div class="p-3 text-zinc-800 font-light text-center">28</div>
+                        <div class="p-3 text-zinc-800 font-light text-center">29</div>
+                        <div class="p-3 text-zinc-800 font-light text-center">30</div>
+                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">1</div>
+                        
+                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">2</div>
+                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">3</div>
+                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">4</div>
+                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">5</div>
+                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">6</div>
+                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">7</div>
+                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">8</div>
+                        
+                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">9</div>
+                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">10</div>
+                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">11</div>
+                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">12</div>
+                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">13</div>
+                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">14</div>
+                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">15</div>
+                        
+                        <div class="p-3 rounded-xl border border-purple-500/30 bg-purple-500/10 text-purple-400 font-semibold text-center transition-all cursor-pointer ring-1 ring-purple-500/20 relative shadow-inner">
+                            16
+                            <span class="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-purple-400 rounded-full"></span>
+                        </div>
+                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer relative">
+                            17
+                            <span class="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-purple-400/50 rounded-full"></span>
+                        </div>
+                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">18</div>
+                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer relative">
+                            19
+                            <span class="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-purple-400/50 rounded-full"></span>
+                        </div>
+                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">20</div>
+                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">21</div>
+                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">22</div>
+
+                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">23</div>
+                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">24</div>
+                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">25</div>
+                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">26</div>
+                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">27</div>
+                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">28</div>
+                        <div class="p-3 rounded-lg border border-transparent hover:border-borderCharcoal text-zinc-400 font-light text-center transition-all cursor-pointer">29</div>
+                    </div>
+                </div>
+
+                <div class="mt-6 space-y-3">
+                    <h3 class="text-xs font-semibold uppercase tracking-widest text-mutedZinc mb-2">Today's Scheduled Operations</h3>
+                    
+                    <div class="flex justify-between items-center p-3.5 rounded-xl bg-void border border-borderCharcoal hover:border-zinc-800 transition-all">
+                        <div class="flex items-center gap-3">
+                            <div class="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
+                            <div>
+                                <h4 class="text-xs font-medium text-white">John Doe - Initial Assessment</h4>
+                                <p class="text-[10px] text-mutedZinc font-light mt-0.5">Pick up: Ashford International Station</p>
+                            </div>
+                        </div>
+                        <span class="text-[10px] text-purple-400 font-medium bg-purple-500/10 border border-purple-500/20 px-2 py-1 rounded-md">12:00 - 13:00</span>
+                    </div>
+                </div>
+
             </div>
         </div>
 
@@ -122,7 +220,7 @@
             } catch (err) {
                 console.error("Network error fetching profiles:", err);
                 document.getElementById('studentTableBody').innerHTML = `
-                    <tr><td colspan="4" class="text-center py-8 text-rose-400 font-medium">Failed to fetch data streams from API backend.</td></tr>
+                    <tr><td colspan="4" class="text-center py-8 text-rose-400 font-light">Failed to decode API database streams.</td></tr>
                 `;
             }
         }
@@ -130,7 +228,7 @@
         function renderStudents(studentsList) {
             const tbody = document.getElementById('studentTableBody');
             if (!Array.isArray(studentsList) || studentsList.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-slate-500">No students found inside Supabase table.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-zinc-600 font-light">No records found inside system table nodes.</td></tr>`;
                 return;
             }
 
@@ -148,21 +246,28 @@
                     }
                 }
                 
-                let displayPhone = 'No Phone';
+                let displayPhone = 'No Contact Link';
                 if (rawPhone !== undefined && rawPhone !== null) {
                     displayPhone = rawPhone.toString().trim();
                 }
 
+                // Elegant dynamic styles for custom premium badges instead of native form widgets
+                const progressColorClass = drivingStatus === 'passed' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                                           drivingStatus === 'learning' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 
+                                           'bg-zinc-500/10 text-zinc-400 border-zinc-500/20';
+
+                const paymentColorClass = paymentStatus === 'Paid' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+
                 return `
-                <tr class="hover:bg-slate-800/20 transition-colors">
+                <tr class="hover:bg-void/40 transition-all group">
                     <td class="py-4 pr-2">
-                        <div class="font-semibold text-white truncate max-w-[100px]">${student.name || 'Anonymous'}</div>
-                        <div class="text-slate-400 text-[10px] mt-0.5">${displayPhone}</div>
+                        <div class="font-medium text-white group-hover:text-purple-400 transition-colors">${student.name || 'Anonymous'}</div>
+                        <div class="text-mutedZinc text-[10px] font-light mt-0.5">${displayPhone}</div>
                     </td>
                     <td class="py-4 pr-2">
                         <select 
                             onchange="updateToggle('${studentId}', 'driving_status', this.value)"
-                            class="bg-slate-900 border border-slate-700 rounded p-1 text-[11px] text-slate-300 focus:outline-none cursor-pointer capitalize w-full"
+                            class="bg-void border border-borderCharcoal text-zinc-300 rounded-lg p-1.5 text-[11px] focus:outline-none focus:border-purple-500/40 cursor-pointer capitalize w-full font-light"
                         >
                             <option value="not_started" ${drivingStatus === 'not_started' ? 'selected' : ''}>Not Started</option>
                             <option value="learning" ${drivingStatus === 'learning' ? 'selected' : ''}>Learning</option>
@@ -174,13 +279,13 @@
                             type="checkbox" 
                             ${theoryChecked ? 'checked' : ''} 
                             onchange="updateToggle('${studentId}', 'theory_passed', this.checked)"
-                            class="w-3.5 h-3.5 rounded bg-slate-900 border-slate-700 text-blue-600 focus:ring-0 cursor-pointer"
+                            class="w-3.5 h-3.5 rounded-md bg-void border-borderCharcoal text-purple-600 focus:ring-0 focus:ring-offset-0 cursor-pointer transition-all"
                         />
                     </td>
                     <td class="py-4 text-right pl-2">
                         <select 
                             onchange="updateToggle('${studentId}', 'payment_status', this.value)"
-                            class="bg-slate-900 border border-slate-700 rounded p-1 text-[11px] text-slate-300 focus:outline-none cursor-pointer"
+                            class="bg-void border border-borderCharcoal text-zinc-300 rounded-lg p-1.5 text-[11px] focus:outline-none focus:border-purple-500/40 cursor-pointer font-light"
                         >
                             <option value="Paid" ${paymentStatus === 'Paid' ? 'selected' : ''}>Paid</option>
                             <option value="Balance Owed" ${paymentStatus === 'Balance Owed' ? 'selected' : ''}>Owed</option>
@@ -205,8 +310,10 @@
                 if (index !== -1) {
                     allStudents[index][field] = value;
                 }
+                // Refresh template context weights smoothly
+                fetchStudents();
             } catch (err) {
-                alert("Failed to write update down to server.");
+                alert("Failed to commit data modification update sequence down to database server.");
             }
         }
 
@@ -221,12 +328,12 @@
             const message = messageInput.value.trim();
             const btn = document.getElementById('sendBroadcastBtn');
 
-            if (!message) return alert("Please input text block before transmitting blast.");
-            if (!confirm(`Are you certain you wish to send this broadcast message to ALL live profiles?`)) return;
+            if (!message) return alert("Validation error: Broadcast body buffer cannot be dispatched empty.");
+            if (!confirm(`Confirm transmission of WhatsApp system broadcast sequence to all live student profile arrays?`)) return;
 
             try {
                 btn.disabled = true;
-                btn.innerText = "Transmitting...";
+                btn.innerText = "Transmitting Stream...";
                 const res = await fetch('/api/broadcast', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -234,16 +341,16 @@
                 });
                 
                 if (res.ok) {
-                    alert("🚀 Broadcast completely finished!");
+                    alert("🚀 Broadcast sequence completely dispatched down to WhatsApp Gateway!");
                     messageInput.value = '';
                 } else {
-                    alert("Failed to dispatch broadcast.");
+                    alert("Broadcast rejected by messaging API nodes.");
                 }
             } catch (err) {
-                alert("Error running network transaction.");
+                alert("Critical network error handling transactional broadcast process.");
             } finally {
                 btn.disabled = false;
-                btn.innerText = "🚀 Send Blast to All Students";
+                btn.innerText = "Dispatch System Broadcast";
             }
         });
     </script>
