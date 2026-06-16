@@ -97,7 +97,7 @@
                         </thead>
                         <tbody id="studentTableBody" class="divide-y divide-borderCharcoal/50 text-xs">
                             <tr>
-                                <td colspan="4" class="text-center py-8 text-zinc-600 font-light">Parsing live database nodes...</td>
+                                <td colspan="4" class="text-center py-8 text-zinc-600 font-light">Loading local system memory data...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -111,7 +111,7 @@
                 <div class="flex justify-between items-center mb-6">
                     <div>
                         <h2 class="text-base font-semibold text-white tracking-wide">Integrated Booking Diary</h2>
-                        <p class="text-[11px] text-mutedZinc font-light mt-0.5">Natively styled calendar slot tracker</p>
+                        <p class="text-[11px] text-mutedZinc font-light mt-0.5">Live Google Calendar feed sync</p>
                     </div>
                     
                     <div class="flex items-center gap-2 bg-void border border-borderCharcoal rounded-xl p-1 text-[11px]">
@@ -142,7 +142,7 @@
         <div class="bg-obsidian border border-borderCharcoal rounded-2xl w-full max-w-sm p-6 shadow-2xl relative">
             <div class="mb-5">
                 <h3 class="text-base font-semibold text-white tracking-wide">Add New Student</h3>
-                <p class="text-[11px] text-mutedZinc font-light mt-0.5">Inject an active pupil node down into storage</p>
+                <p class="text-[11px] text-mutedZinc font-light mt-0.5">Add directly to internal session workspace tracking memory</p>
             </div>
             
             <div class="space-y-4">
@@ -170,15 +170,11 @@
     <script>
         let allStudents = [];
         let currentYear = 2026;
-        let currentMonth = 5; 
+        let currentMonth = 5; // June (0-indexed)
         let selectedDateKey = "2026-06-16"; 
 
-        const agendaRegistry = {
-            "2026-06-15": [{ name: "Sarah Jenkins", type: "Hazard Perception Prep", time: "09:00 - 11:00", location: "Canterbury Center" }],
-            "2026-06-16": [{ name: "John Doe", type: "Initial Assessment Check", time: "12:00 - 13:00", location: "Ashford Station" }],
-            "2026-06-19": [{ name: "Alex Mercer", type: "Mock Practical Exam", time: "14:30 - 16:30", location: "Folkestone Grid" }],
-            "2026-06-24": [{ name: "Emily Watson", type: "Maneuver Execution Drill", time: "10:00 - 12:00", location: "Maidstone Bypass" }]
-        };
+        // 🛑 ALL FAKE DIARY EVENTS REMOVED COMPLETELY
+        let agendaRegistry = {}; 
 
         const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
@@ -211,10 +207,10 @@
                     closeModal();
                     fetchStudents(); 
                 } else {
-                    alert("Database link rejected request. Verify database connectivity mappings.");
+                    alert("Server error occurred saving data to local memory.");
                 }
             } catch (err) {
-                alert("Network error synchronized data sequence pipeline.");
+                alert("Network communication error.");
             }
         }
 
@@ -289,7 +285,7 @@
 
             const events = agendaRegistry[selectedDateKey];
             if (!events || events.length === 0) {
-                feedContainer.innerHTML = `<div class="text-center py-6 border border-dashed border-borderCharcoal rounded-xl text-zinc-600 font-light text-xs">No operational bookings synchronized to this index point.</div>`;
+                feedContainer.innerHTML = `<div class="text-center py-6 border border-dashed border-borderCharcoal rounded-xl text-zinc-600 font-light text-xs">No active live synchronized events on this index point.</div>`;
                 return;
             }
 
@@ -315,14 +311,14 @@
                 renderStudents(allStudents);
                 calculateDashboardMetrics(allStudents);
             } catch (err) {
-                document.getElementById('studentTableBody').innerHTML = `<tr><td colspan="4" class="text-center py-8 text-rose-400 font-light">Failed to decode database stream nodes.</td></tr>`;
+                document.getElementById('studentTableBody').innerHTML = `<tr><td colspan="4" class="text-center py-8 text-rose-400 font-light">Failed to decode memory stream.</td></tr>`;
             }
         }
 
         function renderStudents(studentsList) {
             const tbody = document.getElementById('studentTableBody');
             if (!Array.isArray(studentsList) || studentsList.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-zinc-600 font-light">No records found inside system table nodes.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-zinc-600 font-light">No records found inside local tracking memory.</td></tr>`;
                 return;
             }
 
@@ -332,18 +328,12 @@
                 const drivingStatus = student.driving_status || 'not_started';
                 const paymentStatus = student.payment_status || 'Paid';
                 const testDateText = student.test_date || 'No Test Booked';
-                
-                let rawPhone = null;
-                for (let key in student) {
-                    if (key.trim().toLowerCase().includes('phone')) { rawPhone = student[key]; break; }
-                }
-                const displayPhone = rawPhone ? rawPhone.toString().trim() : 'No Contact Link';
 
                 return `
                 <tr class="hover:bg-void/40 transition-all group">
                     <td class="py-4 pr-2">
                         <div class="font-medium text-white group-hover:text-purple-400 transition-colors">${student.name || 'Anonymous'}</div>
-                        <div class="text-mutedZinc text-[10px] font-light mt-0.5">${displayPhone}</div>
+                        <div class="text-mutedZinc text-[10px] font-light mt-0.5">${student.phone || 'No Contact Link'}</div>
                         <div class="mt-1.5 flex items-center gap-1 text-[9px] font-medium tracking-wide text-zinc-500">
                             <span class="w-1 h-1 bg-zinc-600 rounded-full"></span> Exam: <span class="text-zinc-400">${testDateText}</span>
                         </div>
@@ -378,7 +368,7 @@
                 if (!res.ok) throw new Error("Sync failure");
                 fetchStudents();
             } catch (err) {
-                alert("Failed to update database record.");
+                alert("Failed to update record memory state.");
             }
         }
 
