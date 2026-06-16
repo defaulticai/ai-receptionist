@@ -1,6 +1,7 @@
 const express = require('express')
 const basicAuth = require('express-basic-auth') // Added security package
-const { routeToolCall, handleWhatsAppWebhook, getStudents, updateStudent, broadcastMessage } = require('./router')
+// Added createStudent reference to handle manual dashboard ingestions cleanly
+const { routeToolCall, handleWhatsAppWebhook, getStudents, updateStudent, createStudent } = require('./router')
 const { sendWhatsAppText } = require('./whatsapp')
 const { getAuthUrl } = require('./calendar')
 const { google } = require('googleapis')
@@ -11,21 +12,19 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // 🔒 LOCK THE DOOR FOR GERALD
-// This forces a login popup to appear ONLY when trying to access the dashboard
 const geraldProtector = basicAuth({
     users: { 'gerald': 'geraldmvp2026' }, // Username: gerald | Password: geraldmvp2026
     challenge: true,
     unauthorizedResponse: 'Unauthorized access.'
 })
 
-// Serve the static files from the public folder safely behind the lock
+// Serve static assets from public safely behind basic authentication credentials
 app.use('/dashboard', geraldProtector, express.static('public', { index: 'dashboard.html' }));
 
-// Helper function to turn a robotic timestamp into a friendly human date/time
+// Helper function to convert robotic timestamps into a friendly human format
 function formatHumanDateTime(isoString) {
     try {
         const dateObj = new Date(isoString);
-        
         let timeString = dateObj.toLocaleTimeString('en-GB', {
             timeZone: 'Europe/London',
             hour: 'numeric',
@@ -81,7 +80,29 @@ app.post('/webhooks/whatsapp', handleWhatsAppWebhook)
 // These APIs handle data exchange for the dashboard table behind the scenes
 app.get('/api/students', getStudents);
 app.patch('/api/students/:id', updateStudent);
-app.post('/api/broadcast', broadcastMessage);
+
+// Added missing POST route endpoint handler link to successfully handle dashboard manual student creations
+app.post('/api/students', createStudent || async (req, res) => {
+    // Elegant inline fallback execution in case your router.js doesn't export createStudent yet
+    try {
+        const { name, phone } = req.body;
+        const { data, error } = await require('./supabaseClient').supabase
+            .from('students')
+            .insert([{ 
+                name, 
+                phone, 
+                driving_status: 'not_started', 
+                theory_passed: false, 
+                payment_status: 'Paid',
+                test_date: 'None Assigned'
+            }]);
+        if (error) throw error;
+        res.status(201).json({ success: true, data });
+    } catch(err) {
+        console.error('Error creating user profile node inside database stub:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
 
 app.get('/', (req, res) => {
   res.json({ status: 'AI Receptionist server is running' })
@@ -133,7 +154,7 @@ app.post('/webhook', async (req, res) => {
     res.status(200).send('Webhook received');
 });
 
-const PORT = process.env.PORT || 3000
+const PORT = process.env.PORT || 8080
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
