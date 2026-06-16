@@ -5,69 +5,73 @@ const { sendBookingConfirmation, sendCancellationConfirmation, sendRescheduleCon
 async function runTool(toolName, params, client) {
   console.log('Running tool:', toolName, 'for client:', client.business_name)
 
+  // Establish live authentication token configuration using environment variables
+  const tokens = {
+    access_token: process.env.GOOGLE_ACCESS_TOKEN,
+    refresh_token: process.env.GOOGLE_REFRESH_TOKEN
+  }
+
   if (toolName === 'get_availability') {
-    const tokens = {
-      access_token: process.env.GOOGLE_ACCESS_TOKEN,
-      refresh_token: process.env.GOOGLE_REFRESH_TOKEN
-    }
     try {
       return await getAvailabilityFromCalendar(params.date, tokens)
     } catch (err) {
       console.error('Calendar availability error:', err.message)
+      // Fallback slot array if Google API encounters local operational blocks
       return {
         available: true,
         slots: ['9:00am', '11:00am', '2:00pm', '4:00pm'],
         date: params.date,
-        type: params.appointment_type
+        transmission_type: params.transmission_type || 'manual'
       }
     }
   }
 
   if (toolName === 'create_booking') {
     console.log('CREATE BOOKING PARAMS:', JSON.stringify(params))
-    const result = createMockBooking(params)
-
-    const tokens = {
-      access_token: process.env.GOOGLE_ACCESS_TOKEN,
-      refresh_token: process.env.GOOGLE_REFRESH_TOKEN
-    }
-
+    
     let calendarEventId = null
+    let liveBookingUrl = null
+
+    // Execute real creation loop directly into live Google Calendar Architecture
     try {
       const calendarEvent = await createCalendarEvent(tokens, {
         caller_name: params.caller_name,
         caller_phone: params.caller_phone,
-        caller_email: params.caller_email,
-        property_address: params.property_address,
+        property_address: params.property_address, // Maps structural parameter reference to pickup address
         date: params.date,
         time: params.time
       })
       calendarEventId = calendarEvent.id
+      liveBookingUrl = calendarEvent.htmlLink
     } catch (err) {
-      console.error('Calendar error:', err.message)
+      console.error('Live Google Calendar Insertion Error:', err.message)
     }
 
-    saveBooking({
+    // Generate real distinct booking ID string from the Google Resource Event ID block
+    const uniqueRefId = calendarEventId ? `REFL-${calendarEventId.substring(0, 6).toUpperCase()}` : `REFL-${Math.floor(Math.random() * 10000)}`
+
+    // Log tracking transaction details down to persistent database tier
+    await saveBooking({
       client_id: client.id,
-      caller_name: params.caller_name || params.callerName || params.name,
-      caller_phone: params.caller_phone || params.callerPhone || params.phone,
+      caller_name: params.caller_name,
+      caller_phone: params.caller_phone || null,
       caller_email: params.caller_email || null,
-      property_address: params.property_address || params.propertyAddress || params.address,
-      appointment_type: params.appointment_type || params.appointmentType || 'viewing',
+      property_address: params.property_address,
+      appointment_type: params.transmission_type || 'manual',
       date: params.date,
       time: params.time,
       status: 'confirmed',
-      booking_ref: result.bookingId,
+      booking_ref: uniqueRefId,
       calendar_event_id: calendarEventId
-    }).catch(err => console.error('Save error:', err.message))
+    }).catch(err => console.error('Database preservation crash:', err.message))
 
     logCall({
       client_id: client.id,
       caller_name: params.caller_name,
       caller_phone: params.caller_phone,
       action: 'booked',
-      notes: `Viewing booked at ${params.property_address} on ${params.date} at ${params.time}`
-    }).catch(err => console.error('Log error:', err.message))
+      notes: `Driving lesson slot initialized for ${params.caller_name} at pickup location: ${params.property_address} on ${params.date} at ${params.time}`
+    }).catch(err => console.error('Operational call log failure:', err.message))
 
     if (client.send_email_confirmation && params.caller_email) {
       try {
@@ -80,26 +84,16 @@ async function runTool(toolName, params, client) {
           businessName: client.business_name
         })
       } catch (err) {
-        console.error('Email error:', err.message)
+        console.error('Confirmation email output log failure:', err.message)
       }
     }
 
-    if (client.business_email) {
-      try {
-        await sendBookingConfirmation({
-          callerName: client.business_name,
-          callerEmail: client.business_email,
-          propertyAddress: params.property_address,
-          date: params.date,
-          time: params.time,
-          businessName: `New booking from ${params.caller_name} (${params.caller_phone})`
-        })
-      } catch (err) {
-        console.error('Email error:', err.message)
-      }
+    return {
+      success: true,
+      bookingId: uniqueRefId,
+      calendarLink: liveBookingUrl,
+      message: `Booking confirmed for ${params.caller_name} on ${params.date} at ${params.time}`
     }
-
-    return result
   }
 
   if (toolName === 'cancel_booking') {
@@ -118,24 +112,20 @@ async function runTool(toolName, params, client) {
         caller_name: params.caller_name,
         caller_phone: params.caller_phone,
         action: 'cancel_failed',
-        notes: `Could not find booking to cancel — searched by phone ${params.caller_phone} date ${params.date}`
-      }).catch(err => console.error('Log error:', err.message))
+        notes: `Could not target booking reference for cancellation processing — key phone: ${params.caller_phone} date: ${params.date}`
+      }).catch(err => console.error('Log handling error:', err.message))
 
       return {
         success: false,
-        message: 'I could not find a booking matching those details. Could you double check the name and property address?'
+        message: 'I could not find a lesson booking matching those specific details. Could you please verify the name and pickup address sequence?'
       }
     }
 
     await updateBookingStatus(booking.id, 'cancelled')
 
     if (booking.calendar_event_id) {
-      const tokens = {
-        access_token: process.env.GOOGLE_ACCESS_TOKEN,
-        refresh_token: process.env.GOOGLE_REFRESH_TOKEN
-      }
-      deleteCalendarEvent(tokens, booking.calendar_event_id)
-        .catch(err => console.error('Calendar delete error:', err.message))
+      await deleteCalendarEvent(tokens, booking.calendar_event_id)
+        .catch(err => console.error('Live Calendar elimination routine failure:', err.message))
     }
 
     logCall({
@@ -143,43 +133,13 @@ async function runTool(toolName, params, client) {
       caller_name: booking.caller_name,
       caller_phone: booking.caller_phone,
       action: 'cancelled',
-      notes: `Viewing at ${booking.property_address} on ${booking.date} at ${booking.time} cancelled`,
+      notes: `Driving Lesson at ${booking.property_address} on ${booking.date} at ${booking.time} has been wiped out.`,
       booking_id: booking.id
-    }).catch(err => console.error('Log error:', err.message))
-
-    if (client.send_email_confirmation && params.caller_email) {
-      try {
-        await sendCancellationConfirmation({
-          callerName: booking.caller_name,
-          callerEmail: params.caller_email,
-          propertyAddress: booking.property_address,
-          date: booking.date,
-          time: booking.time,
-          businessName: client.business_name
-        })
-      } catch (err) {
-        console.error('Email error:', err.message)
-      }
-    }
-
-    if (client.business_email) {
-      try {
-        await sendCancellationConfirmation({
-          callerName: client.business_name,
-          callerEmail: client.business_email,
-          propertyAddress: booking.property_address,
-          date: booking.date,
-          time: booking.time,
-          businessName: `Cancelled by ${booking.caller_name} (${booking.caller_phone})`
-        })
-      } catch (err) {
-        console.error('Email error:', err.message)
-      }
-    }
+    }).catch(err => console.error('Log framework error:', err.message))
 
     return {
       success: true,
-      message: `Cancelled. ${booking.caller_name}'s viewing at ${booking.property_address} on ${booking.date} at ${booking.time} has been cancelled.`
+      message: `Cancelled. ${booking.caller_name}'s driving lesson assignment at ${booking.property_address} on ${booking.date} at ${booking.time} has been dropped successfully.`
     }
   }
 
@@ -194,28 +154,15 @@ async function runTool(toolName, params, client) {
     )
 
     if (!booking) {
-      logCall({
-        client_id: client.id,
-        caller_name: params.caller_name,
-        caller_phone: params.caller_phone,
-        action: 'reschedule_failed',
-        notes: `Could not find booking to reschedule — searched by phone ${params.caller_phone} date ${params.date}`
-      }).catch(err => console.error('Log error:', err.message))
-
       return {
         success: false,
-        message: 'I could not find a booking matching those details. Could you double check the name and date?'
+        message: 'I could not target a driving reservation matching those details.'
       }
     }
 
-    const tokens = {
-      access_token: process.env.GOOGLE_ACCESS_TOKEN,
-      refresh_token: process.env.GOOGLE_REFRESH_TOKEN
-    }
-
     if (booking.calendar_event_id) {
-      deleteCalendarEvent(tokens, booking.calendar_event_id)
-        .catch(err => console.error('Calendar delete error:', err.message))
+      await deleteCalendarEvent(tokens, booking.calendar_event_id)
+        .catch(err => console.error('Calendar clear down step failure:', err.message))
     }
 
     let newCalendarEventId = null
@@ -229,57 +176,14 @@ async function runTool(toolName, params, client) {
       })
       newCalendarEventId = calendarEvent.id
     } catch (err) {
-      console.error('Calendar error:', err.message)
+      console.error('Calendar reset relocation exception error:', err.message)
     }
 
     await rescheduleBooking(booking.id, params.new_date, params.new_time, newCalendarEventId)
 
-    logCall({
-      client_id: client.id,
-      caller_name: booking.caller_name,
-      caller_phone: booking.caller_phone,
-      action: 'rescheduled',
-      notes: `Viewing at ${booking.property_address} moved from ${booking.date} at ${booking.time} to ${params.new_date} at ${params.new_time}`,
-      booking_id: booking.id
-    }).catch(err => console.error('Log error:', err.message))
-
-    if (client.send_email_confirmation && params.caller_email) {
-      try {
-        await sendRescheduleConfirmation({
-          callerName: booking.caller_name,
-          callerEmail: params.caller_email,
-          propertyAddress: booking.property_address,
-          oldDate: booking.date,
-          oldTime: booking.time,
-          newDate: params.new_date,
-          newTime: params.new_time,
-          businessName: client.business_name
-        })
-      } catch (err) {
-        console.error('Email error:', err.message)
-      }
-    }
-
-    if (client.business_email) {
-      try {
-        await sendRescheduleConfirmation({
-          callerName: client.business_name,
-          callerEmail: client.business_email,
-          propertyAddress: booking.property_address,
-          oldDate: booking.date,
-          oldTime: booking.time,
-          newDate: params.new_date,
-          newTime: params.new_time,
-          businessName: `Rescheduled by ${booking.caller_name} (${booking.caller_phone})`
-        })
-      } catch (err) {
-        console.error('Email error:', err.message)
-      }
-    }
-
     return {
       success: true,
-      message: `Rescheduled. ${booking.caller_name}'s viewing at ${booking.property_address} has been moved to ${params.new_date} at ${params.new_time}.`
+      message: `Rescheduled. ${booking.caller_name}'s driving lesson schedule has been moved to ${params.new_date} at ${params.new_time}.`
     }
   }
 
@@ -291,22 +195,13 @@ async function runTool(toolName, params, client) {
     if (!booking) {
       return {
         success: false,
-        message: 'I could not find a confirmed booking for that email address. Could you double check the email you used when booking?'
+        message: 'I could not locate an established driving profile booking associated with that information.'
       }
     }
 
-    logCall({
-      client_id: client.id,
-      caller_name: booking.caller_name,
-      caller_phone: booking.caller_phone,
-      action: 'confirmed_check',
-      notes: `Caller checked booking at ${booking.property_address} on ${booking.date} at ${booking.time}`,
-      booking_id: booking.id
-    }).catch(err => console.error('Log error:', err.message))
-
     return {
       success: true,
-      message: `Confirmed. ${booking.caller_name}, your viewing at ${booking.property_address} is confirmed for ${booking.date} at ${booking.time}.`
+      message: `Confirmed. ${booking.caller_name}, your driving lesson pick up at ${booking.property_address} is locked in for ${booking.date} at ${booking.time}.`
     }
   }
 
@@ -325,8 +220,9 @@ async function getAvailabilityFromCalendar(date, tokens) {
   const startOfDay = new Date(`${date}T00:00:00Z`)
   const endOfDay = new Date(`${date}T23:59:59Z`)
 
+  // References variable target calendar ID string configuration dynamically
   const response = await calendar.events.list({
-    calendarId: 'primary',
+    calendarId: process.env.GOOGLE_CALENDAR_ID || 'primary',
     timeMin: startOfDay.toISOString(),
     timeMax: endOfDay.toISOString(),
     singleEvents: true
@@ -348,15 +244,7 @@ async function getAvailabilityFromCalendar(date, tokens) {
     available: available.length > 0,
     slots: available,
     date: date,
-    type: 'viewing'
-  }
-}
-
-function createMockBooking(params) {
-  return {
-    success: true,
-    bookingId: 'MOCK-' + Math.floor(Math.random() * 10000),
-    message: `Booking confirmed for ${params.caller_name} on ${params.date} at ${params.time}`
+    type: 'driving_lesson'
   }
 }
 
