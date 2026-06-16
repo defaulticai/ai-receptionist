@@ -30,17 +30,9 @@
             background-color: #09090b;
             font-family: 'Plus Jakarta Sans', sans-serif;
         }
-        ::-webkit-scrollbar {
-            width: 4px;
-            height: 4px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #141417;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #232329;
-            border-radius: 99px;
-        }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #141417; }
+        ::-webkit-scrollbar-thumb { background: #232329; border-radius: 99px; }
     </style>
 </head>
 <body class="text-platinum min-h-screen p-4 md:p-8 selection:bg-purple-500/30">
@@ -177,7 +169,6 @@
 
     <script>
         let allStudents = [];
-        
         let currentYear = 2026;
         let currentMonth = 5; 
         let selectedDateKey = "2026-06-16"; 
@@ -196,61 +187,42 @@
             renderCalendar();
         });
 
-        function openModal() {
-            document.getElementById('studentModal').style.display = 'flex';
-        }
-        
+        function openModal() { document.getElementById('studentModal').style.display = 'flex'; }
         function closeModal() {
             document.getElementById('studentModal').style.display = 'none';
             document.getElementById('modalStudentName').value = '';
             document.getElementById('modalStudentPhone').value = '';
         }
 
-        // Comprehensive cross-mapping payload to support any database naming convention variant
         async function saveStudent() {
             const name = document.getElementById('modalStudentName').value.trim();
             const phone = document.getElementById('modalStudentPhone').value.trim();
 
             if (!name || !phone) return alert("Validation failed: Please supply a name and phone link.");
 
-            // Send multiple variants of the phone column name to guarantee backend matching
-            const payload = {
-                name: name,
-                phone: phone,
-                phone_number: phone,
-                "Phone Number": phone,
-                driving_status: 'not_started',
-                theory_passed: false,
-                payment_status: 'Paid',
-                test_date: 'None Assigned'
-            };
-
             try {
                 const response = await fetch('/api/students', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({ name, phone })
                 });
 
                 if (response.ok) {
                     closeModal();
                     fetchStudents(); 
                 } else {
-                    alert(`Database link rejected request. Check your backend Express log file for strict constraint errors.`);
+                    alert("Database link rejected request. Verify database connectivity mappings.");
                 }
             } catch (err) {
-                alert("Critical network failure executing student data synchronization.");
+                alert("Network error synchronized data sequence pipeline.");
             }
         }
 
         function calculateDashboardMetrics(students) {
             if (!Array.isArray(students)) return;
-            
             document.getElementById('statTotal').innerText = students.length;
-            
             const passedTheoryCount = students.filter(s => s.theory_passed === true || s.theory_passed === 'true').length;
             document.getElementById('statTheory').innerText = passedTheoryCount;
-            
             const owedCount = students.filter(s => s.payment_status === 'Balance Owed' || s.payment_status === 'Owed').length;
             document.getElementById('statOwed').innerText = owedCount;
         }
@@ -258,7 +230,6 @@
         function renderCalendar() {
             const heading = document.getElementById('calendarHeading');
             const grid = document.getElementById('calendarDaysGrid');
-            
             heading.innerText = `${monthNames[currentMonth]} ${currentYear}`;
             grid.innerHTML = '';
 
@@ -282,7 +253,6 @@
                 
                 const cell = document.createElement('div');
                 cell.innerText = day;
-                
                 let baseStyles = "p-3 rounded-xl text-center font-light cursor-pointer transition-all relative border ";
                 
                 if (dateKey === selectedDateKey) {
@@ -290,7 +260,6 @@
                 } else {
                     baseStyles += "border-transparent text-zinc-400 hover:border-borderCharcoal hover:text-white";
                 }
-                
                 cell.className = baseStyles;
 
                 if (agendaRegistry[dateKey]) {
@@ -298,45 +267,29 @@
                     indicator.className = `absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${dateKey === selectedDateKey ? 'bg-purple-400' : 'bg-purple-500/40'}`;
                     cell.appendChild(indicator);
                 }
-
-                cell.onclick = () => {
-                    selectedDateKey = dateKey;
-                    renderCalendar(); 
-                };
-
+                cell.onclick = () => { selectedDateKey = dateKey; renderCalendar(); };
                 grid.appendChild(cell);
             }
-
             updateAgendaView();
         }
 
         function changeMonth(direction) {
             currentMonth += direction;
-            if (currentMonth > 11) {
-                currentMonth = 0;
-                currentYear++;
-            } else if (currentMonth < 0) {
-                currentMonth = 11;
-                currentYear--;
-            }
+            if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+            else if (currentMonth < 0) { currentMonth = 11; currentYear--; }
             renderCalendar();
         }
 
         function updateAgendaView() {
             const feedContainer = document.getElementById('agendaFeedContainer');
             const header = document.getElementById('agendaHeader');
-            
             const [y, m, d] = selectedDateKey.split('-');
             header.innerText = `Agenda Log: ${d}/${m}/${y}`;
             feedContainer.innerHTML = '';
 
             const events = agendaRegistry[selectedDateKey];
-
             if (!events || events.length === 0) {
-                feedContainer.innerHTML = `
-                    <div class="text-center py-6 border border-dashed border-borderCharcoal rounded-xl text-zinc-600 font-light text-xs">
-                        No operational bookings synchronized to this index point.
-                    </div>`;
+                feedContainer.innerHTML = `<div class="text-center py-6 border border-dashed border-borderCharcoal rounded-xl text-zinc-600 font-light text-xs">No operational bookings synchronized to this index point.</div>`;
                 return;
             }
 
@@ -362,10 +315,7 @@
                 renderStudents(allStudents);
                 calculateDashboardMetrics(allStudents);
             } catch (err) {
-                console.error("Network error fetching profiles:", err);
-                document.getElementById('studentTableBody').innerHTML = `
-                    <tr><td colspan="4" class="text-center py-8 text-rose-400 font-light">Failed to decode API database streams.</td></tr>
-                `;
+                document.getElementById('studentTableBody').innerHTML = `<tr><td colspan="4" class="text-center py-8 text-rose-400 font-light">Failed to decode database stream nodes.</td></tr>`;
             }
         }
 
@@ -385,16 +335,9 @@
                 
                 let rawPhone = null;
                 for (let key in student) {
-                    if (key.trim().toLowerCase().includes('phone')) {
-                        rawPhone = student[key];
-                        break;
-                    }
+                    if (key.trim().toLowerCase().includes('phone')) { rawPhone = student[key]; break; }
                 }
-                
-                let displayPhone = 'No Contact Link';
-                if (rawPhone !== undefined && rawPhone !== null) {
-                    displayPhone = rawPhone.toString().trim();
-                }
+                const displayPhone = rawPhone ? rawPhone.toString().trim() : 'No Contact Link';
 
                 return `
                 <tr class="hover:bg-void/40 transition-all group">
@@ -406,34 +349,22 @@
                         </div>
                     </td>
                     <td class="py-4 pr-2">
-                        <select 
-                            onchange="updateToggle('${studentId}', 'driving_status', this.value)"
-                            class="bg-void border border-borderCharcoal text-zinc-300 rounded-lg p-1.5 text-[11px] focus:outline-none focus:border-purple-500/40 cursor-pointer capitalize w-full font-light"
-                        >
+                        <select onchange="updateToggle('${studentId}', 'driving_status', this.value)" class="bg-void border border-borderCharcoal text-zinc-300 rounded-lg p-1.5 text-[11px] focus:outline-none focus:border-purple-500/40 cursor-pointer capitalize w-full font-light">
                             <option value="not_started" ${drivingStatus === 'not_started' ? 'selected' : ''}>Not Started</option>
                             <option value="learning" ${drivingStatus === 'learning' ? 'selected' : ''}>Learning</option>
                             <option value="passed" ${drivingStatus === 'passed' ? 'selected' : ''}>Passed</option>
                         </select>
                     </td>
                     <td class="py-4 text-center">
-                        <input 
-                            type="checkbox" 
-                            ${theoryChecked ? 'checked' : ''} 
-                            onchange="updateToggle('${studentId}', 'theory_passed', this.checked)"
-                            class="w-3.5 h-3.5 rounded-md bg-void border-borderCharcoal text-purple-600 focus:ring-0 focus:ring-offset-0 cursor-pointer transition-all"
-                        />
+                        <input type="checkbox" ${theoryChecked ? 'checked' : ''} onchange="updateToggle('${studentId}', 'theory_passed', this.checked)" class="w-3.5 h-3.5 rounded-md bg-void border-borderCharcoal text-purple-600 focus:ring-0 focus:ring-offset-0 cursor-pointer transition-all" />
                     </td>
                     <td class="py-4 text-right pl-2">
-                        <select 
-                            onchange="updateToggle('${studentId}', 'payment_status', this.value)"
-                            class="bg-void border border-borderCharcoal text-zinc-300 rounded-lg p-1.5 text-[11px] focus:outline-none focus:border-purple-500/40 cursor-pointer font-light"
-                        >
+                        <select onchange="updateToggle('${studentId}', 'payment_status', this.value)" class="bg-void border border-borderCharcoal text-zinc-300 rounded-lg p-1.5 text-[11px] focus:outline-none focus:border-purple-500/40 cursor-pointer font-light">
                             <option value="Paid" ${paymentStatus === 'Paid' ? 'selected' : ''}>Paid</option>
-                            <option value="Balance Owed" ${paymentStatus === 'Balance Owed' ? 'selected' : '' || paymentStatus === 'Owed' ? 'selected' : ''}>Owed</option>
+                            <option value="Balance Owed" ${paymentStatus === 'Balance Owed' || paymentStatus === 'Owed' ? 'selected' : ''}>Owed</option>
                         </select>
                     </td>
-                </tr>
-                `;
+                </tr>`;
             }).join('');
         }
 
@@ -444,16 +375,10 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ [field]: value })
                 });
-                
                 if (!res.ok) throw new Error("Sync failure");
-                
-                const index = allStudents.findIndex(s => s.id == id);
-                if (index !== -1) {
-                    allStudents[index][field] = value;
-                }
                 fetchStudents();
             } catch (err) {
-                alert("Failed to commit data modification update sequence down to database server.");
+                alert("Failed to update database record.");
             }
         }
 
