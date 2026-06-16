@@ -66,12 +66,18 @@ app.post('/webhook', async (req, res) => {
     if (booking.triggerEvent === 'BOOKING_CREATED') {
         const payload = booking.payload;
         
-        // Extract student details
-        const studentName = payload.attendees[0].name;
+        // Extract student details safely
+        const studentName = payload.attendees?.[0]?.name || 'Student';
         const startTime = new Date(payload.startTime).toLocaleString('en-GB', { timeZone: 'Europe/London' });
         
-        // Extract custom fields (Phone and Address)
-        const phoneField = payload.responses?.phone || '';
+        // Pull phone directly from the attendee metadata object or custom fields fallback
+        let phoneField = payload.attendees?.[0]?.phoneNumber || payload.responses?.phone || '';
+        
+        // Clean out any white spaces or symbols (+ symbol) so Evolution API reads it cleanly
+        if (phoneField) {
+            phoneField = phoneField.replace(/\+/g, '').replace(/\s+/g, '').trim();
+        }
+
         const addressField = payload.responses?.address?.value || payload.responses?.address || 'Not provided';
 
         console.log(`New Booking Received! Name: ${studentName}, Phone: ${phoneField}, Address: ${addressField}`);
