@@ -37,19 +37,20 @@ EXACT POSTCODES WE COVER:
 - KT16 (Chertsey)
 
 PRICING STRUCTURE:
-- Standard Weekday & Saturday Rates: 1 hour (£46), 1.5 hours (£69), 2 hours (£92).
-- Premium Rates (After 5 PM or Sundays): £50 per hour (£100 for a 2-hour lesson).
+- Weekday & Saturday Rates: 1 hour (£46), 1.5 hours (£69), 2 hours (£92).
+- Sunday Rates: 1 hour (£50), 2 hours (£100).
+*CRITICAL: Never refer to Sunday or late rates as "Premium". Just say "Our Sunday rate is..." or "Our rate for after 5 PM is...".*
 
-CONVERSATION & QUALIFICATION RULES:
-1. INITIAL RESPONSE: When a user asks about pricing or booking, quote the standard and premium pricing clearly in Message 1. In Message 2, ask for their pickup postcode AND whether they want manual or automatic lessons.
-2. MULTI-MESSAGE SPLIT: Always separate your initial pricing response and qualification question into two distinct messages using the double pipe symbol "||".
+CONVERSATION & PRICING RULES:
+1. ANSWER ONLY WHAT IS ASKED: If a user asks about pricing for a specific day or specific duration, only quote the exact price for that request. Never list other available durations, options, or alternative days unless requested.
+2. INITIAL RESPONSE MULTI-MESSAGE SPLIT: When answering an inquiry, phrase your thoughts into two parts separated by a double pipe symbol "||". Part 1 must contain just the direct answer to their question. Part 2 must contain your qualification question asking for their pickup postcode AND whether they want manual or automatic lessons.
 3. POSTCODE & GEARBOX EVALUATION: 
    - Extract the postcode outcode from their reply (e.g., TW19, TW3). If their postcode prefix is NOT explicitly listed in the "EXACT POSTCODES WE COVER" section above, politely inform them we do not cover their area yet.
    - If their postcode is on our list and they state their gearbox preference, instantly provide the direct calendar link for them to book their initial 2-hour assessment lesson.
 4. CALENDAR LINK: Use the placeholder link: https://cal.com/defaultic-ai-cwhqnr/initial-assessment
 
 EXAMPLE CLOSING FORMAT (After receiving valid Postcode & Gearbox):
-Perfect, we have coverage for automatic lessons in TW19. To book your initial 2-hour assessment lesson with Gerald or Zahid, please pick a live slot directly on our calendar here: https://your-calendar-link.com/booking
+Perfect, we have coverage for automatic lessons in TW19. To book your initial 2-hour assessment lesson with Gerald or Zahid, please pick a live slot directly on our calendar here: https://cal.com/defaultic-ai-cwhqnr/initial-assessment
 `;
 
 async function handleIncomingWhatsApp(payload) {
@@ -79,7 +80,6 @@ async function handleIncomingWhatsApp(payload) {
             return; 
         }
 
-        // Initialize Groq safely inside the request check 
         if (!process.env.GROQ_API_KEY) {
             console.error("❌ CRITICAL ERROR: GROQ_API_KEY variable is missing on Railway!");
             return;
@@ -120,20 +120,27 @@ async function handleIncomingWhatsApp(payload) {
 
         const evolutionUrl = `${payload.server_url}/message/sendText/${payload.instance}`;
         
-        await fetch(evolutionUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'apikey': payload.apikey
-            },
-            body: JSON.stringify({
-                number: senderNumber,
-                options: { delay: 1000, presence: 'composing' },
-                text: aiReply
-            })
-        });
+        // Split response by "||" to handle multi-message sending cleanly
+        const messagesToSend = aiReply.split('||').map(msg => msg.trim()).filter(msg => msg.length > 0);
 
-        console.log(`✅ Message processed perfectly via Groq engine!`);
+        for (const textChunk of messagesToSend) {
+            await fetch(evolutionUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': payload.apikey
+                },
+                body: JSON.stringify({
+                    number: senderNumber,
+                    options: { delay: 1200, presence: 'composing' },
+                    text: textChunk
+                })
+            });
+            // Brief pause between chunks to keep real-time texting sequence natural
+            await new Promise(resolve => setTimeout(resolve, 1500));
+        }
+
+        console.log(`✅ Message split and processed perfectly via Groq engine!`);
         console.log(`==================================================\n`);
         
     } catch (error) {
@@ -141,13 +148,11 @@ async function handleIncomingWhatsApp(payload) {
     }
 }
 
-// Reusable helper function to send standard WhatsApp text messages
 async function sendWhatsAppText(number, text) {
     try {
-        // Hardcode your Evolution API details from your environment variables
-        const serverUrl = process.env.EVOLUTION_SERVER_URL; // e.g., https://your-evolution-instance.com
-        const instance = process.env.EVOLUTION_INSTANCE;     // e.g., your_instance_name
-        const apiKey = process.env.EVOLUTION_API_KEY;         // e.g., your_evolution_apikey
+        const serverUrl = process.env.EVOLUTION_SERVER_URL;
+        const instance = process.env.EVOLUTION_INSTANCE;
+        const apiKey = process.env.EVOLUTION_API_KEY;
 
         if (!serverUrl || !instance || !apiKey) {
             console.error("❌ Missing Evolution API credentials in environment variables!");
@@ -174,7 +179,6 @@ async function sendWhatsAppText(number, text) {
     }
 }
 
-// Export BOTH functions so server.js can see them
 module.exports = {
     handleIncomingWhatsApp,
     sendWhatsAppText
