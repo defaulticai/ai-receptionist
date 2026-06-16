@@ -1,4 +1,4 @@
-const { saveBooking, getBookingByDetails, updateBookingStatus, rescheduleBooking, logCall, getBookingByEmail } = require('./db')
+const { saveBooking, getBookingByDetails, updateBookingStatus, rescheduleBooking, logCall, getBookingByEmail, upsertStudent } = require('./db')
 const { createCalendarEvent, deleteCalendarEvent } = require('./calendar')
 const { sendBookingConfirmation, sendCancellationConfirmation, sendRescheduleConfirmation } = require('./email')
 
@@ -37,7 +37,7 @@ try {
     }
   }
 
-  if (toolName === 'create_booking') {
+if (toolName === 'create_booking') {
     console.log('CREATE BOOKING PARAMS:', JSON.stringify(params))
     
     let calendarEventId = null
@@ -56,6 +56,20 @@ try {
       liveBookingUrl = calendarEvent.htmlLink
     } catch (err) {
       console.error('Live Google Calendar Insertion Error:', err.message)
+    }
+
+    // NEW: Send the newly booked student straight to your unified dashboard table
+    try {
+      await upsertStudent({
+        name: params.caller_name,
+        phone: params.caller_phone || "Unknown Phone",
+        transmission: params.transmission_type,
+        address: params.property_address,
+        source: 'call' // Tags them as a phone lead on your dashboard
+      })
+      console.log(`Successfully synced student ${params.caller_name} to dashboard table.`)
+    } catch (dbErr) {
+      console.error('Dashboard student sync error:', dbErr.message)
     }
 
     // Generate real distinct booking ID string from the Google Resource Event ID block
