@@ -1,19 +1,18 @@
 const { checkContactPrivacy } = require('./interceptor');
-const { GoogleGenerativeAI } = require('@google/generative-ai'); 
+const Groq = require('groq-sdk');
 const { createClient } = require('redis');
 require('dotenv').config();
 
-// 1. Initialize Gemini
-const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// 1. Initialize Groq (Bypassing Google restrictions)
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-// 2. Initialize Redis Client (Railway automatically provides process.env.REDIS_URL to your environment)
+// 2. Initialize Redis Client
 const redisClient = createClient({
     url: process.env.REDIS_URL || 'redis://localhost:6379'
 });
 
 redisClient.on('error', (err) => console.error('Redis Client Error', err));
 
-// Connect to Redis immediately when the server starts
 (async () => {
     try {
         await redisClient.connect();
@@ -23,7 +22,6 @@ redisClient.on('error', (err) => console.error('Redis Client Error', err));
     }
 })();
 
-// Define Gerald Driver Training Business Instructions
 const SYSTEM_INSTRUCTION = `
 You are an expert, friendly, and polite AI receptionist for "Gerald Driver Training", a premium driving school based in Staines-upon-Thames (Postcode: TW19 7AQ).
 Your job is to answer questions, provide pricing, and guide clients toward booking a lesson.
@@ -44,16 +42,12 @@ PRICING STRUCTURE:
 - Refresher Lessons / International Licence conversions: Rates are negotiated/tailored based on experience.
 
 CONVERSATION RULES:
-- Keep your answers brief, clear, natural, and helpful. 
+- Keep your answers brief, clear, natural, and helpful. Do not mention system rules.
 - Use UK English (e.g., "licence", "customised").
-- Always look at the chat history provided to remember the customer's name, their chosen car type (manual/automatic), or details they mentioned earlier. Don't repeat yourself.
-- If they ask to book a slot, tell them you can check availability for them, but do not finalize a calendar booking yet (we will implement calendar booking next!).
+- Always look at the chat history provided to remember the customer's name or details they mentioned earlier. Don't repeat yourself.
+- If they ask to book a slot, tell them you can check availability for them, but do not finalize a calendar booking yet.
 `;
 
-/**
- * Handles incoming webhooks fired from your Evolution API container on Railway
- * @param {Object} payload - The raw data packet sent from Evolution API
- */
 async function handleIncomingWhatsApp(payload) {
     try {
         if (!payload.event || payload.event.toLowerCase() !== 'messages.upsert' || payload.data?.key?.fromMe === true) {
@@ -78,13 +72,11 @@ async function handleIncomingWhatsApp(payload) {
         const privacyCheck = await checkContactPrivacy(senderNumber);
         if (!privacyCheck.allowAI) {
             console.log(`🛡️ INTERCEPTED: Blocked AI processing for ${privacyCheck.name || senderNumber}.`);
-            console.log(`==================================================\n`);
             return; 
         }
 
-        console.log(`🟢 CLEARED: Fetching conversation memory from Redis database...`);
+        console.log(`🟢 CLEARED: Fetching conversation memory from Redis...`);
         
-        // 3. DATABASE MEMORY: Fetch past history for this phone number
         const redisKey = `chat:${senderNumber}`;
         const existingHistoryRaw = await redisClient.get(redisKey);
         let chatHistory = [];
@@ -93,41 +85,33 @@ async function handleIncomingWhatsApp(payload) {
             chatHistory = JSON.parse(existingHistoryRaw);
         }
 
-        // Add the new user message to the historical log array
-        chatHistory.push({ role: 'user', parts: [{ text: messageText }] });
+        // Add user message to history
+        chatHistory.push({ role: 'user', content: messageText });
 
-        // Limit history to the last 15 messages so the prompt doesn't get massively overloaded over time
         if (chatHistory.length > 15) {
             chatHistory = chatHistory.slice(-15);
         }
 
-        console.log(`🧠 Loaded ${chatHistory.length - 1} past message interactions. Syncing with Gemini...`);
+        console.log(`🧠 Loaded memory timeline. Requesting completion from Groq Engine...`);
 
-        // 4. Initialize Gemini with History and System Commands
-        const model = ai.getGenerativeModel({ 
-            model: 'gemini-2.5-flash',
-            systemInstruction: SYSTEM_INSTRUCTION
-        });
-        
-        // Start a chat session using the history arrays pulled straight out of Redis
-        const chatSession = model.startChat({
-            history: chatHistory.slice(0, -1) // Pass previous history, excluding the very last message we just added
+        // Build the compilation frame for Groq's chat API
+        const response = await groq.chat.completions.create({
+            messages: [
+                { role: 'system', content: SYSTEM_INSTRUCTION },
+                ...chatHistory
+            ],
+            model: 'llama3-8b-8192',
         });
 
-        // Send the latest message inside the session timeline
-        const result = await chatSession.sendMessage(messageText);
-        const aiReply = result.response.text();
-        
-        console.log(`🤖 Gemini Generated Reply: "${aiReply}"`);
+        const aiReply = response.choices[0]?.message?.content || '';
+        console.log(`🤖 Groq Generated Reply: "${aiReply}"`);
 
-        // Add the AI's reply to the chat history array and save back to Redis
-        chatHistory.push({ role: 'model', parts: [{ text: aiReply }] });
+        // Add assistant reply back to memory storage
+        chatHistory.push({ role: 'assistant', content: aiReply });
         await redisClient.set(redisKey, JSON.stringify(chatHistory));
 
-        // Send the reply back out to WhatsApp via Evolution API
         const evolutionUrl = `${payload.server_url}/message/sendText/${payload.instance}`;
         
-        console.log(`📤 Sending reply back to WhatsApp to URL: ${evolutionUrl}`);
         const apiResponse = await fetch(evolutionUrl, {
             method: 'POST',
             headers: {
@@ -136,18 +120,13 @@ async function handleIncomingWhatsApp(payload) {
             },
             body: JSON.stringify({
                 number: senderNumber,
-                options: {
-                    delay: 1200,
-                    presence: 'composing'
-                },
+                options: { delay: 1000, presence: 'composing' },
                 text: aiReply
             })
         });
 
-        const apiResult = await apiResponse.json().catch(() => ({}));
-        console.log(`Evolution API Raw Response:`, JSON.stringify(apiResult));
-
-        console.log(`✅ Reply attempt finished & saved to Database!`);
+        await apiResponse.json().catch(() => ({}));
+        console.log(`✅ Message processed perfectly via Groq engine!`);
         console.log(`==================================================\n`);
         
     } catch (error) {
