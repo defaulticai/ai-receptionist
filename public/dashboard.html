@@ -115,12 +115,13 @@
             initializeCalEmbed();
         });
 
-        // Configure Cal.com rendering target properties with live user link
+       // Configure Cal.com rendering target properties with live user link
         function initializeCalEmbed() {
             Cal("inline", {
                 elementOrSelector: "#cal-inline-embed",
                 calLink: "defaultic-ai-cwhqnr/initial-assessment",
-                layout: "month_view"
+                layout: "month_view",
+                calOrigin: "https://app.cal.eu" // <-- THIS TELLS IT TO USE THE EU SERVER INSTEAD
             });
 
             // Applies matching premium dark mode styles natively inside the embed layout frame
