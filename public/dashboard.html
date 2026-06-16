@@ -45,7 +45,7 @@
 </head>
 <body class="text-platinum min-h-screen p-4 md:p-8 selection:bg-purple-500/30">
 
-    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center mb-10 pb-6 border-b border-borderCharcoal gap-4">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-6 border-b border-borderCharcoal gap-4">
         <div>
             <h1 class="text-2xl font-bold tracking-tight text-white">Gerald Driver Training</h1>
             <p class="text-mutedZinc text-xs mt-1 font-light tracking-wide">Operational MVP & Client Management Suite</p>
@@ -57,7 +57,22 @@
 
     <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
-        <div class="lg:col-span-5 space-y-6">
+        <div class="lg:col-span-7 space-y-6">
+            
+            <div class="grid grid-cols-3 gap-4">
+                <div class="bg-obsidian border border-borderCharcoal p-4 rounded-xl">
+                    <p class="text-[10px] uppercase font-semibold text-mutedZinc tracking-widest">Active Fleet</p>
+                    <p id="statTotal" class="text-xl font-bold text-white mt-1">0</p>
+                </div>
+                <div class="bg-obsidian border border-borderCharcoal p-4 rounded-xl">
+                    <p class="text-[10px] uppercase font-semibold text-mutedZinc tracking-widest">Theory Cleared</p>
+                    <p id="statTheory" class="text-xl font-bold text-emerald-400 mt-1">0</p>
+                </div>
+                <div class="bg-obsidian border border-borderCharcoal p-4 rounded-xl">
+                    <p class="text-[10px] uppercase font-semibold text-mutedZinc tracking-widest">Owed Balance</p>
+                    <p id="statOwed" class="text-xl font-bold text-rose-400 mt-1">0</p>
+                </div>
+            </div>
             
             <div class="bg-obsidian border border-borderCharcoal rounded-2xl p-6 shadow-2xl">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
@@ -68,13 +83,13 @@
                                 ＋
                             </button>
                         </div>
-                        <p class="text-[11px] text-mutedZinc font-light mt-0.5">Real-time client synchronization matrix</p>
+                        <p class="text-[11px] text-mutedZinc font-light mt-0.5">Real-time client performance and structural ledger</p>
                     </div>
                     <input 
                         type="text" 
                         id="searchBar"
                         placeholder="Search name..." 
-                        class="bg-void border border-borderCharcoal rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-purple-500/50 w-full sm:w-40 placeholder-zinc-600 transition-all"
+                        class="bg-void border border-borderCharcoal rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-purple-500/50 w-full sm:w-42 placeholder-zinc-600 transition-all"
                     />
                 </div>
 
@@ -82,10 +97,10 @@
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="border-b border-borderCharcoal text-mutedZinc text-[10px] font-medium uppercase tracking-widest">
-                                <th class="pb-3">Info</th>
-                                <th class="pb-3">Progress</th>
-                                <th class="pb-3 text-center">Theory</th>
-                                <th class="pb-3 text-right">Payment</th>
+                                <th class="pb-3">Info & Milestones</th>
+                                <th class="pb-3">Progress Profile</th>
+                                <th class="pb-3 text-center">Theory Pass</th>
+                                <th class="pb-3 text-right">Invoice Status</th>
                             </tr>
                         </thead>
                         <tbody id="studentTableBody" class="divide-y divide-borderCharcoal/50 text-xs">
@@ -97,35 +112,14 @@
                 </div>
             </div>
 
-            <div class="bg-obsidian border border-borderCharcoal rounded-2xl p-6 shadow-2xl">
-                <div class="mb-4">
-                    <h2 class="text-base font-semibold text-white tracking-wide">Message Centre</h2>
-                    <p class="text-[11px] text-mutedZinc font-light mt-0.5">Instant secure broadcast transmission network</p>
-                </div>
-                
-                <textarea 
-                    id="broadcastMessage"
-                    rows="3"
-                    placeholder="Compose announcement sequence..."
-                    class="w-full bg-void border border-borderCharcoal rounded-xl p-4 text-xs text-white focus:outline-none focus:border-purple-500/50 resize-none placeholder-zinc-600 transition-all"
-                ></textarea>
-
-                <button 
-                    id="sendBroadcastBtn"
-                    class="w-full mt-4 font-medium py-3 rounded-xl text-xs transition-all tracking-wide text-white bg-purple-600 hover:bg-purple-500 shadow-lg shadow-purple-600/10 active:scale-[0.99]"
-                >
-                    Dispatch System Broadcast
-                </button>
-            </div>
-
         </div>
 
-        <div class="lg:col-span-7">
+        <div class="lg:col-span-5">
             <div class="bg-obsidian border border-borderCharcoal rounded-2xl p-6 shadow-2xl flex flex-col">
                 <div class="flex justify-between items-center mb-6">
                     <div>
                         <h2 class="text-base font-semibold text-white tracking-wide">Integrated Booking Diary</h2>
-                        <p class="text-[11px] text-mutedZinc font-light mt-0.5">Natively styled dashboard timetable slots</p>
+                        <p class="text-[11px] text-mutedZinc font-light mt-0.5">Natively styled calendar slot tracker</p>
                     </div>
                     
                     <div class="flex items-center gap-2 bg-void border border-borderCharcoal rounded-xl p-1 text-[11px]">
@@ -139,7 +133,6 @@
                     <div class="grid grid-cols-7 gap-2 text-center text-[10px] uppercase font-semibold tracking-widest text-mutedZinc mb-4">
                         <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
                     </div>
-                    
                     <div id="calendarDaysGrid" class="grid grid-cols-7 gap-2 text-xs"></div>
                 </div>
 
@@ -157,17 +150,17 @@
         <div class="bg-obsidian border border-borderCharcoal rounded-2xl w-full max-w-sm p-6 shadow-2xl relative">
             <div class="mb-5">
                 <h3 class="text-base font-semibold text-white tracking-wide">Add New Student</h3>
-                <p class="text-[11px] text-mutedZinc font-light mt-0.5">Inject an active pupil node down into Supabase storage</p>
+                <p class="text-[11px] text-mutedZinc font-light mt-0.5">Inject an active pupil node down into storage</p>
             </div>
             
             <div class="space-y-4">
                 <div>
                     <label class="block text-[10px] text-mutedZinc font-medium uppercase tracking-wider mb-1.5">Full Name</label>
-                    <input type="text" id="modalStudentName" placeholder="e.g. John Doe" class="w-full bg-void border border-borderCharcoal rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500/50 placeholder-zinc-600" />
+                    <input type="text" id="modalStudentName" placeholder="e.g. Imad" class="w-full bg-void border border-borderCharcoal rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500/50 placeholder-zinc-600" />
                 </div>
                 <div>
                     <label class="block text-[10px] text-mutedZinc font-medium uppercase tracking-wider mb-1.5">Phone Number</label>
-                    <input type="text" id="modalStudentPhone" placeholder="e.g. +44 7824012557" class="w-full bg-void border border-borderCharcoal rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500/50 placeholder-zinc-600" />
+                    <input type="text" id="modalStudentPhone" placeholder="e.g. +44 7824012556" class="w-full bg-void border border-borderCharcoal rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500/50 placeholder-zinc-600" />
                 </div>
             </div>
 
@@ -185,16 +178,14 @@
     <script>
         let allStudents = [];
         
-        // Setup initial execution context state matching June 2026
         let currentYear = 2026;
-        let currentMonth = 5; // 0-Indexed base value (0 = January, 5 = June)
-        let selectedDateKey = "2026-06-16"; // Pre-highlight starting operational focus
+        let currentMonth = 5; 
+        let selectedDateKey = "2026-06-16"; 
 
-        // Seeded Mock Booking Framework Registry keyed to dynamic system queries
         const agendaRegistry = {
             "2026-06-15": [{ name: "Sarah Jenkins", type: "Hazard Perception Prep", time: "09:00 - 11:00", location: "Canterbury Center" }],
-            "2026-06-16": [{ name: "John Doe", type: "Initial Assessment Check", time: "12:00 - 13:00", location: "Ashford International Station" }],
-            "2026-06-19": [{ name: "Alex Mercer", type: "Mock Practical Exam Pass Flight", time: "14:30 - 16:30", location: "Folkestone Grid" }],
+            "2026-06-16": [{ name: "John Doe", type: "Initial Assessment Check", time: "12:00 - 13:00", location: "Ashford Station" }],
+            "2026-06-19": [{ name: "Alex Mercer", type: "Mock Practical Exam", time: "14:30 - 16:30", location: "Folkestone Grid" }],
             "2026-06-24": [{ name: "Emily Watson", type: "Maneuver Execution Drill", time: "10:00 - 12:00", location: "Maidstone Bypass" }]
         };
 
@@ -205,41 +196,66 @@
             renderCalendar();
         });
 
-        // Modal Form Node State Triggers
         function openModal() {
             document.getElementById('studentModal').style.display = 'flex';
         }
+        
         function closeModal() {
             document.getElementById('studentModal').style.display = 'none';
             document.getElementById('modalStudentName').value = '';
             document.getElementById('modalStudentPhone').value = '';
         }
 
+        // Fixed Form Injection Strategy to solve backend synchronization rejections
         async function saveStudent() {
             const name = document.getElementById('modalStudentName').value.trim();
             const phone = document.getElementById('modalStudentPhone').value.trim();
 
-            if (!name || !phone) return alert("Validation failed: All form elements must be populated.");
+            if (!name || !phone) return alert("Validation failed: Please supply a name and phone link.");
+
+            // Flatten data properties into a clean payload structure
+            const payload = {
+                name: name,
+                phone: phone,
+                driving_status: 'not_started',
+                theory_passed: false,
+                payment_status: 'Paid',
+                test_date: 'None Assigned'
+            };
 
             try {
                 const response = await fetch('/api/students', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, phone, driving_status: 'not_started', theory_passed: false, payment_status: 'Paid' })
+                    body: JSON.stringify(payload)
                 });
 
                 if (response.ok) {
                     closeModal();
-                    fetchStudents(); // Pull active table view updates
+                    fetchStudents(); 
                 } else {
-                    alert("Database link rejected student ingestion blueprint pipeline.");
+                    // Raw verification catch fallback text if column types mismatch
+                    const errResponse = await response.json().catch(() => ({}));
+                    console.error("Backend rejection diagnostic data:", errResponse);
+                    alert(`Database link rejected request. If error persists, ensure your server route maps keys directly.`);
                 }
             } catch (err) {
                 alert("Critical network failure executing student data synchronization.");
             }
         }
 
-        // Native Calendar Computation Vector Loop Engine
+        function calculateDashboardMetrics(students) {
+            if (!Array.isArray(students)) return;
+            
+            document.getElementById('statTotal').innerText = students.length;
+            
+            const passedTheoryCount = students.filter(s => s.theory_passed === true || s.theory_passed === 'true').length;
+            document.getElementById('statTheory').innerText = passedTheoryCount;
+            
+            const owedCount = students.filter(s => s.payment_status === 'Balance Owed' || s.payment_status === 'Owed').length;
+            document.getElementById('statOwed').innerText = owedCount;
+        }
+
         function renderCalendar() {
             const heading = document.getElementById('calendarHeading');
             const grid = document.getElementById('calendarDaysGrid');
@@ -247,13 +263,11 @@
             heading.innerText = `${monthNames[currentMonth]} ${currentYear}`;
             grid.innerHTML = '';
 
-            // Map current offset positions
             const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
-            const adjustedFirstDay = firstDayIndex === 0 ? 6 : firstDayIndex - 1; // Sync layout to Monday
+            const adjustedFirstDay = firstDayIndex === 0 ? 6 : firstDayIndex - 1; 
             const totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
             const prevMonthTotalDays = new Date(currentYear, currentMonth, 0).getDate();
 
-            // 1. Draw Previous Month Tail Offsets
             for (let i = adjustedFirstDay - 1; i >= 0; i--) {
                 const placeholderDay = prevMonthTotalDays - i;
                 const cell = document.createElement('div');
@@ -262,7 +276,6 @@
                 grid.appendChild(cell);
             }
 
-            // 2. Draw Live Month Date Cells Loop
             for (let day = 1; day <= totalDays; day++) {
                 const formattedMonth = String(currentMonth + 1).padStart(2, '0');
                 const formattedDay = String(day).padStart(2, '0');
@@ -271,7 +284,6 @@
                 const cell = document.createElement('div');
                 cell.innerText = day;
                 
-                // Base structure rendering logic elements
                 let baseStyles = "p-3 rounded-xl text-center font-light cursor-pointer transition-all relative border ";
                 
                 if (dateKey === selectedDateKey) {
@@ -282,7 +294,6 @@
                 
                 cell.className = baseStyles;
 
-                // If scheduled events exist inside static context block, attach structural indicators
                 if (agendaRegistry[dateKey]) {
                     const indicator = document.createElement('span');
                     indicator.className = `absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${dateKey === selectedDateKey ? 'bg-purple-400' : 'bg-purple-500/40'}`;
@@ -291,7 +302,7 @@
 
                 cell.onclick = () => {
                     selectedDateKey = dateKey;
-                    renderCalendar(); // Apply visual highlight states dynamically
+                    renderCalendar(); 
                 };
 
                 grid.appendChild(cell);
@@ -316,7 +327,6 @@
             const feedContainer = document.getElementById('agendaFeedContainer');
             const header = document.getElementById('agendaHeader');
             
-            // Format dynamic localized display title tracking context
             const [y, m, d] = selectedDateKey.split('-');
             header.innerText = `Agenda Log: ${d}/${m}/${y}`;
             feedContainer.innerHTML = '';
@@ -351,6 +361,7 @@
                 const res = await fetch('/api/students');
                 allStudents = await res.json();
                 renderStudents(allStudents);
+                calculateDashboardMetrics(allStudents);
             } catch (err) {
                 console.error("Network error fetching profiles:", err);
                 document.getElementById('studentTableBody').innerHTML = `
@@ -371,6 +382,7 @@
                 const theoryChecked = student.theory_passed === true || student.theory_passed === 'true';
                 const drivingStatus = student.driving_status || 'not_started';
                 const paymentStatus = student.payment_status || 'Paid';
+                const testDateText = student.test_date || 'No Test Booked';
                 
                 let rawPhone = null;
                 for (let key in student) {
@@ -390,6 +402,9 @@
                     <td class="py-4 pr-2">
                         <div class="font-medium text-white group-hover:text-purple-400 transition-colors">${student.name || 'Anonymous'}</div>
                         <div class="text-mutedZinc text-[10px] font-light mt-0.5">${displayPhone}</div>
+                        <div class="mt-1.5 flex items-center gap-1 text-[9px] font-medium tracking-wide text-zinc-500">
+                            <span class="w-1 h-1 bg-zinc-600 rounded-full"></span> Exam: <span class="text-zinc-400">${testDateText}</span>
+                        </div>
                     </td>
                     <td class="py-4 pr-2">
                         <select 
@@ -415,7 +430,7 @@
                             class="bg-void border border-borderCharcoal text-zinc-300 rounded-lg p-1.5 text-[11px] focus:outline-none focus:border-purple-500/40 cursor-pointer font-light"
                         >
                             <option value="Paid" ${paymentStatus === 'Paid' ? 'selected' : ''}>Paid</option>
-                            <option value="Balance Owed" ${paymentStatus === 'Balance Owed' ? 'selected' : ''}>Owed</option>
+                            <option value="Balance Owed" ${paymentStatus === 'Balance Owed' ? 'selected' : '' || paymentStatus === 'Owed' ? 'selected' : ''}>Owed</option>
                         </select>
                     </td>
                 </tr>
@@ -447,37 +462,6 @@
             const val = e.target.value.toLowerCase();
             const filtered = allStudents.filter(s => s.name?.toLowerCase().includes(val));
             renderStudents(filtered);
-        });
-
-        document.getElementById('sendBroadcastBtn').addEventListener('click', async () => {
-            const messageInput = document.getElementById('broadcastMessage');
-            const message = messageInput.value.trim();
-            const btn = document.getElementById('sendBroadcastBtn');
-
-            if (!message) return alert("Validation error: Broadcast body buffer cannot be dispatched empty.");
-            if (!confirm(`Confirm transmission of WhatsApp system broadcast sequence to all live student profile arrays?`)) return;
-
-            try {
-                btn.disabled = true;
-                btn.innerText = "Transmitting Stream...";
-                const res = await fetch('/api/broadcast', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message })
-                });
-                
-                if (res.ok) {
-                    alert("🚀 Broadcast sequence completely dispatched down to WhatsApp Gateway!");
-                    messageInput.value = '';
-                } else {
-                    alert("Broadcast rejected by messaging API nodes.");
-                }
-            } catch (err) {
-                alert("Critical network error handling transactional broadcast process.");
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "Dispatch System Broadcast";
-            }
         });
     </script>
 </body>
