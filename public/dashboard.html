@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerald Driver Training - Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script type="text/javascript">
+      (function (C, A, L) { let p = function (a, ar) { a.q.push(ar); }; let d = C.document; C.Cal = C.Cal || function () { let cal = C.Cal; let ar = arguments; if (!cal.loaded) { cal.ns = {}; cal.q = cal.q || []; d.head.appendChild(d.createElement("script")).src = A; cal.loaded = true; } if (ar[0] === L) { const api = cal.ns[namespace] = api) && p(api, ar) : p(cal, ar); return; } p(cal, ar); }; })(window, "https://app.cal.com/embed/embed.js", "init");
+      Cal("init", {origin:"https://cal.com"});
+    </script>
 </head>
 <body class="bg-slate-900 text-slate-100 font-sans min-h-screen p-4 md:p-8">
 
@@ -18,63 +23,100 @@
         </div>
     </div>
 
-    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        <div class="lg:col-span-2 bg-slate-800/40 border border-slate-800 rounded-2xl p-6 backdrop-blur-md">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                <h2 class="text-xl font-bold text-white">Active Student Profiles</h2>
-                <input 
-                    type="text" 
-                    id="searchBar"
-                    placeholder="Search student name..." 
-                    class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-blue-500 w-full sm:w-64 text-white"
-                />
+        <div class="lg:col-span-5 space-y-8">
+            
+            <div class="bg-slate-800/40 border border-slate-800 rounded-2xl p-6 backdrop-blur-md">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                    <h2 class="text-xl font-bold text-white">👥 Active Pupils</h2>
+                    <input 
+                        type="text" 
+                        id="searchBar"
+                        placeholder="Search student name..." 
+                        class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-blue-500 w-full sm:w-48 text-white text-xs"
+                    />
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-700 text-slate-400 text-xs uppercase tracking-wider">
+                                <th class="pb-3 font-medium">Info</th>
+                                <th class="pb-3 font-medium">Progress</th>
+                                <th class="pb-3 font-medium text-center">Theory</th>
+                                <th class="pb-3 font-medium text-right">Payment</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentTableBody" class="divide-y divide-slate-800 text-xs">
+                            <tr>
+                                <td colspan="4" class="text-center py-8 text-slate-500">Loading records...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="border-b border-slate-700 text-slate-400 text-xs uppercase tracking-wider">
-                            <th class="pb-3 font-medium">Student Info</th>
-                            <th class="pb-3 font-medium">Driving Status</th>
-                            <th class="pb-3 font-medium text-center">Theory Pass</th>
-                            <th class="pb-3 font-medium text-right">Payment</th>
-                        </tr>
-                    </thead>
-                    <tbody id="studentTableBody" class="divide-y divide-slate-800 text-sm">
-                        <tr>
-                            <td colspan="4" class="text-center py-8 text-slate-500">Loading student profiles from network...</td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div class="bg-slate-800/40 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between backdrop-blur-md h-fit">
+                <div>
+                    <h2 class="text-xl font-bold text-white mb-2">📣 Message Centre</h2>
+                    <p class="text-xs text-slate-400 mb-4">Transmit secure WhatsApp blast notifications to all active students instantly.</p>
+                    
+                    <textarea 
+                        id="broadcastMessage"
+                        rows="4"
+                        placeholder="Type alert details here..."
+                        class="w-full bg-slate-900 border border-slate-700 rounded-xl p-4 text-xs text-slate-100 focus:outline-none focus:border-blue-500 resize-none placeholder-slate-500"
+                    ></textarea>
+                </div>
+
+                <button 
+                    id="sendBroadcastBtn"
+                    class="w-full mt-4 font-semibold py-3 rounded-xl text-xs transition-all shadow-md text-white bg-emerald-600 hover:bg-emerald-500 flex justify-center items-center gap-2"
+                >
+                    🚀 Send Blast to All Students
+                </button>
             </div>
+
         </div>
 
-        <div class="bg-slate-800/40 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between backdrop-blur-md h-fit">
-            <div>
-                <h2 class="text-xl font-bold text-white mb-2">WhatsApp Broadcast</h2>
-                <p class="text-xs text-slate-400 mb-4">Transmit a secure message block directly to all active student profiles instantly over the gateway network.</p>
+        <div class="lg:col-span-7">
+            <div class="bg-slate-800/40 border border-slate-800 rounded-2xl p-6 backdrop-blur-md h-full flex flex-col">
+                <div class="mb-4">
+                    <h2 class="text-xl font-bold text-white">📅 Integrated Booking Diary</h2>
+                    <p class="text-xs text-slate-400 mt-1">Live visibility synced with your Google Calendar scheduling slots.</p>
+                </div>
                 
-                <textarea 
-                    id="broadcastMessage"
-                    rows="6"
-                    placeholder="Type your alert here... e.g., Hey everyone, due to unexpected road maintenance, lessons tomorrow will be pushed back by 30 mins! Thanks, Gerald."
-                    class="w-full bg-slate-900 border border-slate-700 rounded-xl p-4 text-sm text-slate-100 focus:outline-none focus:border-blue-500 resize-none placeholder-slate-500"
-                ></textarea>
+                <div id="cal-inline-embed" class="w-full flex-1 min-h-[600px] rounded-xl overflow-hidden border border-slate-700 bg-slate-900/40"></div>
             </div>
-
-            <button 
-                id="sendBroadcastBtn"
-                class="w-full mt-4 font-semibold py-3 rounded-xl transition-all shadow-md text-white bg-emerald-600 hover:bg-emerald-500 flex justify-center items-center gap-2"
-            >
-                🚀 Send Blast to All Students
-            </button>
         </div>
 
     </div>
 
     <script>
         let allStudents = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchStudents();
+            initializeCalEmbed();
+        });
+
+        // 3. Configure Cal.com rendering target properties
+        function initializeCalEmbed() {
+            Cal("inline", {
+                elementOrSelector: "#cal-inline-embed",
+                calLink: "https://cal.com/defaultic-ai-cwhqnr/initial-assessment", // <--- REPLACE THIS WITH YOUR CAL.COM USERNAME/SLUG
+                layout: "month_view"
+            });
+
+            // Applies matching premium dark mode styles natively inside the embed layout frame
+            Cal("ui", {
+                theme: "dark",
+                styles: { branding: { brandColor: "#0284c7" } },
+                hideEventTypeDetails: false,
+                layout: "month_view"
+            });
+        }
 
         async function fetchStudents() {
             try {
@@ -102,11 +144,7 @@
                 const drivingStatus = student.driving_status || 'not_started';
                 const paymentStatus = student.payment_status || 'Paid';
                 
-                // --- SMART PHONE NUMBER SCANNER ---
-                // This checks common variations (phone, phone_number, Phone, etc.) 
-                // and trims hidden spacing quirks.
                 let rawPhone = null;
-                
                 for (let key in student) {
                     if (key.trim().toLowerCase().includes('phone')) {
                         rawPhone = student[key];
@@ -118,18 +156,17 @@
                 if (rawPhone !== undefined && rawPhone !== null) {
                     displayPhone = rawPhone.toString().trim();
                 }
-                // ----------------------------------
 
                 return `
                 <tr class="hover:bg-slate-800/20 transition-colors">
-                    <td class="py-4">
-                        <div class="font-semibold text-white">${student.name || 'Anonymous Student'}</div>
-                        <div class="text-slate-400 text-xs mt-0.5">${displayPhone}</div>
+                    <td class="py-4 pr-2">
+                        <div class="font-semibold text-white truncate max-w-[100px]">${student.name || 'Anonymous'}</div>
+                        <div class="text-slate-400 text-[10px] mt-0.5">${displayPhone}</div>
                     </td>
-                    <td class="py-4">
+                    <td class="py-4 pr-2">
                         <select 
                             onchange="updateToggle('${studentId}', 'driving_status', this.value)"
-                            class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none cursor-pointer capitalize"
+                            class="bg-slate-900 border border-slate-700 rounded p-1 text-[11px] text-slate-300 focus:outline-none cursor-pointer capitalize w-full"
                         >
                             <option value="not_started" ${drivingStatus === 'not_started' ? 'selected' : ''}>Not Started</option>
                             <option value="learning" ${drivingStatus === 'learning' ? 'selected' : ''}>Learning</option>
@@ -141,13 +178,13 @@
                             type="checkbox" 
                             ${theoryChecked ? 'checked' : ''} 
                             onchange="updateToggle('${studentId}', 'theory_passed', this.checked)"
-                            class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-blue-600 focus:ring-0 cursor-pointer"
+                            class="w-3.5 h-3.5 rounded bg-slate-900 border-slate-700 text-blue-600 focus:ring-0 cursor-pointer"
                         />
                     </td>
-                    <td class="py-4 text-right">
+                    <td class="py-4 text-right pl-2">
                         <select 
                             onchange="updateToggle('${studentId}', 'payment_status', this.value)"
-                            class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none cursor-pointer"
+                            class="bg-slate-900 border border-slate-700 rounded p-1 text-[11px] text-slate-300 focus:outline-none cursor-pointer"
                         >
                             <option value="Paid" ${paymentStatus === 'Paid' ? 'selected' : ''}>Paid</option>
                             <option value="Balance Owed" ${paymentStatus === 'Balance Owed' ? 'selected' : ''}>Owed</option>
@@ -157,6 +194,7 @@
                 `;
             }).join('');
         }
+
         async function updateToggle(id, field, value) {
             try {
                 const res = await fetch(`/api/students/${id}`, {
@@ -167,7 +205,6 @@
                 
                 if (!res.ok) throw new Error("Sync failure");
                 
-                // Update local memory data store quietly so view stays consistent
                 const index = allStudents.findIndex(s => s.id == id);
                 if (index !== -1) {
                     allStudents[index][field] = value;
@@ -176,6 +213,12 @@
                 alert("Failed to write update down to server.");
             }
         }
+
+        document.getElementById('searchBar').addEventListener('input', (e) => {
+            const val = e.target.value.toLowerCase();
+            const filtered = allStudents.filter(s => s.name?.toLowerCase().includes(val));
+            renderStudents(filtered);
+        });
 
         document.getElementById('sendBroadcastBtn').addEventListener('click', async () => {
             const messageInput = document.getElementById('broadcastMessage');
@@ -187,9 +230,7 @@
 
             try {
                 btn.disabled = true;
-                btn.innerText = "Transmitting Packet Streams...";
-                btn.className = "w-full mt-4 font-semibold py-3 rounded-xl shadow-md text-white bg-slate-700 cursor-not-allowed";
-
+                btn.innerText = "Transmitting...";
                 const res = await fetch('/api/broadcast', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -197,27 +238,18 @@
                 });
                 
                 if (res.ok) {
-                    alert("🚀 Broadcast processing completely finished on remote nodes!");
+                    alert("🚀 Broadcast completely finished!");
                     messageInput.value = '';
                 } else {
-                    alert("Failed to dispatch broadcast completely.");
+                    alert("Failed to dispatch broadcast.");
                 }
             } catch (err) {
                 alert("Error running network transaction.");
             } finally {
                 btn.disabled = false;
                 btn.innerText = "🚀 Send Blast to All Students";
-                btn.className = "w-full mt-4 font-semibold py-3 rounded-xl shadow-md text-white bg-emerald-600 hover:bg-emerald-500";
             }
         });
-
-        document.getElementById('searchBar').addEventListener('input', (e) => {
-            const val = e.target.value.toLowerCase();
-            const filtered = allStudents.filter(s => s.name?.toLowerCase().includes(val));
-            renderStudents(filtered);
-        });
-
-        fetchStudents();
     </script>
 </body>
 </html>
