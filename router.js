@@ -49,6 +49,28 @@ async function handleWhatsAppWebhook(req, res) {
   }
 }
 
+// 1. Fetch all student profiles from Supabase safely
+async function getStudents(req, res) {
+  try {
+    if (!supabase) {
+      console.error('❌ Supabase instance is completely missing from imports.');
+      return res.status(500).json([]);
+    }
+
+    const { data, error } = await supabase
+      .from('contacts')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    
+    return res.status(200).json(data || []);
+  } catch (error) {
+    console.error('Error fetching students:', error.message);
+    return res.status(500).json([]); 
+  }
+}
+
 // 2. Update a student's profile checkboxes or fields dynamically
 async function updateStudent(req, res) {
   try {
