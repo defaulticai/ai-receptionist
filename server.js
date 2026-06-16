@@ -128,22 +128,36 @@ app.patch('/api/students/:id', (req, res) => {
 
 // --- LIVE GOOGLE CALENDAR SYNC ENDPOINT ---
 
+// --- LIVE GOOGLE CALENDAR SYNC ENDPOINT ---
 app.get('/api/calendar-events', async (req, res) => {
     try {
-        if (!fs.existsSync('./tokens.json')) {
+        // Fall back to environment variables or local tokens file if it exists
+        let tokens;
+        if (fs.existsSync('./tokens.json')) {
+            tokens = JSON.parse(fs.readFileSync('./tokens.json', 'utf8'));
+        } else if (process.env.GOOGLE_ACCESS_TOKEN && process.env.GOOGLE_REFRESH_TOKEN) {
+            tokens = {
+                access_token: process.env.GOOGLE_ACCESS_TOKEN,
+                refresh_token: process.env.GOOGLE_REFRESH_TOKEN
+            };
+        }
+
+        // If no credentials found at all, return empty data object safely
+        if (!tokens) {
+            console.warn("No calendar sync keys found in local filesystem or environment.");
             return res.json({}); 
         }
 
-        const tokens = JSON.parse(fs.readFileSync('./tokens.json', 'utf8'));
         const { getOAuthClient } = require('./calendar');
         const oauth2Client = getOAuthClient();
         oauth2Client.setCredentials(tokens);
 
         const calendarClient = google.calendar({ version: 'v3', auth: oauth2Client });
         
+        // Fetch up to 30 days ago to confidently populate the full current month grid view
         const response = await calendarClient.events.list({
             calendarId: 'primary',
-            timeMin: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), // Fetch from 30 days ago to catch current month view
+            timeMin: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), 
             maxResults: 100,
             singleEvents: true,
             orderBy: 'startTime',
