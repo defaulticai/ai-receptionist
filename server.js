@@ -1,5 +1,6 @@
 const express = require('express')
-const { routeToolCall, handleWhatsAppWebhook } = require('./router')
+// STEP 1: Added the 3 new functions to the router import line here
+const { routeToolCall, handleWhatsAppWebhook, getStudents, updateStudent, broadcastMessage } = require('./router')
 const { sendWhatsAppText } = require('./whatsapp')
 const { getAuthUrl } = require('./calendar')
 const { google } = require('googleapis')
@@ -70,6 +71,11 @@ app.post('/tool-call', async (req, res) => {
 
 // New POST route to open the door for Evolution API webhooks
 app.post('/webhooks/whatsapp', handleWhatsAppWebhook)
+
+// STEP 2: Mounted your 3 new dashboard API endpoints right here
+app.get('/api/students', getStudents);
+app.patch('/api/students/:id', updateStudent);
+app.post('/api/broadcast', broadcastMessage);
 
 app.get('/', (req, res) => {
   res.json({ status: 'AI Receptionist server is running' })
