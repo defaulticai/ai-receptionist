@@ -1,5 +1,6 @@
 const express = require('express')
-const { routeToolCall, handleWhatsAppWebhook } = require('./router') // Imported the new WhatsApp webhook handler
+const { routeToolCall, handleWhatsAppWebhook } = require('./router')
+const { sendWhatsAppText } = require('./whatsapp')
 const { getAuthUrl } = require('./calendar')
 const { google } = require('googleapis')
 require('dotenv').config()
@@ -67,7 +68,6 @@ app.post('/webhook', async (req, res) => {
         
         // Extract student details
         const studentName = payload.attendees[0].name;
-        const studentEmail = payload.attendees[0].email;
         const startTime = new Date(payload.startTime).toLocaleString('en-GB', { timeZone: 'Europe/London' });
         
         // Extract custom fields (Phone and Address)
@@ -76,8 +76,15 @@ app.post('/webhook', async (req, res) => {
 
         console.log(`New Booking Received! Name: ${studentName}, Phone: ${phoneField}, Address: ${addressField}`);
 
-        // TODO: Call your WhatsApp sending function here to text the student
-        // example: sendWhatsApp(phoneField, `Hi ${studentName}, your driving lesson is confirmed for ${startTime}!`);
+        if (phoneField) {
+            // Craft the message to send automatically
+            const message = `Hi ${studentName}, your 2-Hour Driving Assessment is successfully confirmed for ${startTime}! Looking forward to seeing you.`;
+            
+            // Fire the text live via your whatsapp.js helper function
+            await sendWhatsAppText(phoneField, message);
+        } else {
+            console.log(`⚠️ Could not send automated text: No phone number found for ${studentName}.`);
+        }
     }
 
     // Always respond with a 200 OK so Cal.com knows we received it
