@@ -1,5 +1,6 @@
 const { checkContactPrivacy } = require('./interceptor');
 const Groq = require('groq-sdk');
+const { supabase } = require('./db');
 const { createClient } = require('redis');
 require('dotenv').config();
 
@@ -145,6 +146,21 @@ async function handleIncomingWhatsApp(payload) {
                     text: textChunk
                 })
             });
+
+            // 💾 Log the bot's live conversation reply straight to Supabase
+            if (supabase) {
+                await supabase
+                    .from('message_logs')
+                    .insert([
+                        {
+                            phone_number: senderNumber,
+                            message_body: textChunk,
+                            sender: 'bot'
+                        }
+                    ]);
+                console.log(`💾 Logged bot conversation reply to ${senderNumber}`);
+            }
+
             // Brief pause between chunks to keep real-time texting sequence natural
             await new Promise(resolve => setTimeout(resolve, 1500));
         }
@@ -183,6 +199,20 @@ async function sendWhatsAppText(number, text) {
             })
         });
         console.log(`🚀 Automated WhatsApp confirmation sent to ${number}`);
+
+        // 💾 Log the automated background notification text straight to Supabase
+        if (supabase) {
+            await supabase
+                .from('message_logs')
+                .insert([
+                    {
+                        phone_number: number,
+                        message_body: text,
+                        sender: 'bot'
+                    }
+                ]);
+            console.log(`💾 Logged bot automated confirmation text to ${number}`);
+        }
     } catch (error) {
         console.error("❌ Error running sendWhatsAppText helper:", error.message);
     }
