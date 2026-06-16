@@ -1,9 +1,9 @@
 const express = require('express')
-const basicAuth = require('express-basic-auth') // Added security package
+const basicAuth = require('express-basic-auth')
+const fs = require('fs');
 const { routeToolCall, handleWhatsAppWebhook, getStudents, updateStudent } = require('./router')
 const { sendWhatsAppText } = require('./whatsapp')
 const { getAuthUrl } = require('./calendar')
-const fs = require('fs');
 const { google } = require('googleapis')
 require('dotenv').config()
 
@@ -13,7 +13,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // 🔒 LOCK THE DOOR FOR GERALD
 const geraldProtector = basicAuth({
-    users: { 'gerald': 'geraldmvp2026' }, // Username: gerald | Password: geraldmvp2026
+    users: { 'gerald': 'geraldmvp2026' },
     challenge: true,
     unauthorizedResponse: 'Unauthorized access.'
 })
@@ -82,12 +82,10 @@ app.post('/webhooks/whatsapp', handleWhatsAppWebhook)
 
 // --- DASHBOARD MEMORY HANDLERS ---
 
-// Returns the local runtime student list to feed the tracking UI
 app.get('/api/students', (req, res) => {
     res.json(localDashboardStudents);
 });
 
-// Appends manually entered profiles instantly to local memory loop
 app.post('/api/students', (req, res) => {
     try {
         const { name, phone } = req.body;
@@ -111,7 +109,6 @@ app.post('/api/students', (req, res) => {
     }
 });
 
-// Handles field toggles and dropdown edits within the frontend table row matrices
 app.patch('/api/students/:id', (req, res) => {
     try {
         const { id } = req.params;
@@ -129,7 +126,65 @@ app.patch('/api/students/:id', (req, res) => {
     }
 });
 
-// ---------------------------------
+// --- LIVE GOOGLE CALENDAR SYNC ENDPOINT ---
+
+app.get('/api/calendar-events', async (req, res) => {
+    try {
+        if (!fs.existsSync('./tokens.json')) {
+            return res.json({}); 
+        }
+
+        const tokens = JSON.parse(fs.readFileSync('./tokens.json', 'utf8'));
+        const { getOAuthClient } = require('./calendar');
+        const oauth2Client = getOAuthClient();
+        oauth2Client.setCredentials(tokens);
+
+        const calendarClient = google.calendar({ version: 'v3', auth: oauth2Client });
+        
+        const response = await calendarClient.events.list({
+            calendarId: 'primary',
+            timeMin: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), // Fetch from 30 days ago to catch current month view
+            maxResults: 100,
+            singleEvents: true,
+            orderBy: 'startTime',
+        });
+
+        const googleEvents = response.data.items || [];
+        const formattedRegistry = {};
+        
+        googleEvents.forEach(event => {
+            const startDateTime = event.start.dateTime || event.start.date;
+            if (!startDateTime) return;
+            
+            const dateKey = startDateTime.split('T')[0]; 
+            
+            let timeString = "All Day";
+            if (event.start.dateTime && event.end.dateTime) {
+                const start = new Date(event.start.dateTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+                const end = new Date(event.end.dateTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+                timeString = `${start} - ${end}`;
+            }
+
+            if (!formattedRegistry[dateKey]) {
+                formattedRegistry[dateKey] = [];
+            }
+
+            formattedRegistry[dateKey].push({
+                name: event.summary || "Driving Lesson",
+                type: event.description ? event.description.substring(0, 40) : "Cal.com Appointment",
+                location: event.location || "Maidstone Route Area",
+                time: timeString
+            });
+        });
+
+        res.json(formattedRegistry);
+    } catch (err) {
+        console.error("Error fetching Google Calendar:", err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ------------------------------------------
 
 app.get('/', (req, res) => {
   res.json({ status: 'AI Receptionist server is running' })
@@ -148,10 +203,7 @@ app.get('/auth/google/callback', async (req, res) => {
     const { tokens } = await oauth2Client.getToken(code)
     
     console.log('GOOGLE TOKENS RECEIVED:', JSON.stringify(tokens))
-    
-    // 💾 SAVE TOKENS TO A LOCAL FILE SO THE SERVER CAN USE THEM LATER
     fs.writeFileSync('./tokens.json', JSON.stringify(tokens, null, 2));
-    console.log('Tokens successfully saved to tokens.json');
     
     res.send('Connected! Your calendar is now linked. You can close this tab and refresh your dashboard.');
   } catch (err) {
