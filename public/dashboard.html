@@ -169,18 +169,20 @@
 
     <script>
         let allStudents = [];
-        let currentYear = 2026;
-        let currentMonth = 5; // June (0-indexed)
-        let selectedDateKey = "2026-06-16"; 
+        const now = new Date();
+        let currentYear = now.getFullYear();
+        let currentMonth = now.getMonth(); 
+        
+        // Auto-select current date key setup
+        let selectedDateKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`; 
 
-        // 🛑 ALL FAKE DIARY EVENTS REMOVED COMPLETELY
         let agendaRegistry = {}; 
 
         const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
         document.addEventListener('DOMContentLoaded', () => {
             fetchStudents();
-            renderCalendar();
+            fetchLiveEvents();
         });
 
         function openModal() { document.getElementById('studentModal').style.display = 'flex'; }
@@ -188,6 +190,17 @@
             document.getElementById('studentModal').style.display = 'none';
             document.getElementById('modalStudentName').value = '';
             document.getElementById('modalStudentPhone').value = '';
+        }
+
+        async function fetchLiveEvents() {
+            try {
+                const res = await fetch('/api/calendar-events');
+                const liveData = await res.json();
+                agendaRegistry = liveData;
+            } catch (e) {
+                console.error("Could not sync live diary feed:", e);
+            }
+            renderCalendar();
         }
 
         async function saveStudent() {
@@ -258,9 +271,9 @@
                 }
                 cell.className = baseStyles;
 
-                if (agendaRegistry[dateKey]) {
+                if (agendaRegistry[dateKey] && agendaRegistry[dateKey].length > 0) {
                     const indicator = document.createElement('span');
-                    indicator.className = `absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${dateKey === selectedDateKey ? 'bg-purple-400' : 'bg-purple-500/40'}`;
+                    indicator.className = `absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${dateKey === selectedDateKey ? 'bg-purple-400' : 'bg-purple-500'}`;
                     cell.appendChild(indicator);
                 }
                 cell.onclick = () => { selectedDateKey = dateKey; renderCalendar(); };
@@ -295,8 +308,8 @@
                         <div class="flex items-center gap-3">
                             <div class="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
                             <div>
-                                <h4 class="text-xs font-medium text-white">${ev.name} - ${ev.type}</h4>
-                                <p class="text-[10px] text-mutedZinc font-light mt-0.5">Location: ${ev.location}</p>
+                                <h4 class="text-xs font-medium text-white">${ev.name}</h4>
+                                <p class="text-[10px] text-mutedZinc font-light mt-0.5">${ev.type} | Info: ${ev.location}</p>
                             </div>
                         </div>
                         <span class="text-[10px] text-purple-400 font-medium bg-purple-500/10 border border-purple-500/20 px-2 py-1 rounded-md whitespace-nowrap">${ev.time}</span>
