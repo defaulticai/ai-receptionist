@@ -141,4 +141,41 @@ async function handleIncomingWhatsApp(payload) {
     }
 }
 
-module.exports = handleIncomingWhatsApp;
+// Reusable helper function to send standard WhatsApp text messages
+async function sendWhatsAppText(number, text) {
+    try {
+        // Hardcode your Evolution API details from your environment variables
+        const serverUrl = process.env.EVOLUTION_SERVER_URL; // e.g., https://your-evolution-instance.com
+        const instance = process.env.EVOLUTION_INSTANCE;     // e.g., your_instance_name
+        const apiKey = process.env.EVOLUTION_API_KEY;         // e.g., your_evolution_apikey
+
+        if (!serverUrl || !instance || !apiKey) {
+            console.error("❌ Missing Evolution API credentials in environment variables!");
+            return;
+        }
+
+        const evolutionUrl = `${serverUrl}/message/sendText/${instance}`;
+        
+        await fetch(evolutionUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'apikey': apiKey
+            },
+            body: JSON.stringify({
+                number: number,
+                options: { delay: 1000, presence: 'composing' },
+                text: text
+            })
+        });
+        console.log(`🚀 Automated WhatsApp confirmation sent to ${number}`);
+    } catch (error) {
+        console.error("❌ Error running sendWhatsAppText helper:", error.message);
+    }
+}
+
+// Export BOTH functions so server.js can see them
+module.exports = {
+    handleIncomingWhatsApp,
+    sendWhatsAppText
+};
