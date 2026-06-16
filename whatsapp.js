@@ -3,10 +3,7 @@ const Groq = require('groq-sdk');
 const { createClient } = require('redis');
 require('dotenv').config();
 
-// 1. Initialize Groq (Bypassing Google restrictions)
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-
-// 2. Initialize Redis Client
+// Initialize Redis Client
 const redisClient = createClient({
     url: process.env.REDIS_URL || 'redis://localhost:6379'
 });
@@ -75,6 +72,13 @@ async function handleIncomingWhatsApp(payload) {
             return; 
         }
 
+        // Initialize Groq safely inside the request check 
+        if (!process.env.GROQ_API_KEY) {
+            console.error("❌ CRITICAL ERROR: GROQ_API_KEY variable is missing on Railway!");
+            return;
+        }
+        const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
         console.log(`🟢 CLEARED: Fetching conversation memory from Redis...`);
         
         const redisKey = `chat:${senderNumber}`;
@@ -85,7 +89,6 @@ async function handleIncomingWhatsApp(payload) {
             chatHistory = JSON.parse(existingHistoryRaw);
         }
 
-        // Add user message to history
         chatHistory.push({ role: 'user', content: messageText });
 
         if (chatHistory.length > 15) {
@@ -94,7 +97,6 @@ async function handleIncomingWhatsApp(payload) {
 
         console.log(`🧠 Loaded memory timeline. Requesting completion from Groq Engine...`);
 
-        // Build the compilation frame for Groq's chat API
         const response = await groq.chat.completions.create({
             messages: [
                 { role: 'system', content: SYSTEM_INSTRUCTION },
@@ -106,13 +108,12 @@ async function handleIncomingWhatsApp(payload) {
         const aiReply = response.choices[0]?.message?.content || '';
         console.log(`🤖 Groq Generated Reply: "${aiReply}"`);
 
-        // Add assistant reply back to memory storage
         chatHistory.push({ role: 'assistant', content: aiReply });
         await redisClient.set(redisKey, JSON.stringify(chatHistory));
 
         const evolutionUrl = `${payload.server_url}/message/sendText/${payload.instance}`;
         
-        const apiResponse = await fetch(evolutionUrl, {
+        await fetch(evolutionUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -125,7 +126,6 @@ async function handleIncomingWhatsApp(payload) {
             })
         });
 
-        await apiResponse.json().catch(() => ({}));
         console.log(`✅ Message processed perfectly via Groq engine!`);
         console.log(`==================================================\n`);
         
