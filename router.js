@@ -4,22 +4,10 @@ const { handleIncomingWhatsApp, sendWhatsAppText } = require('./whatsapp');
 
 async function routeToolCall(body) {
   console.log('BODY:', JSON.stringify(body))
-
-  const assistantId = 
-    body?.message?.call?.assistantId ||
-    body?.call?.assistantId ||
-    body?.assistantId ||
-    'unknown'
-
-  const toolCall = 
-    body?.message?.toolCalls?.[0] ||
-    body?.toolCalls?.[0]
-
+  const assistantId = body?.message?.call?.assistantId || body?.call?.assistantId || body?.assistantId || 'unknown'
+  const toolCall = body?.message?.toolCalls?.[0] || body?.toolCalls?.[0]
   const toolName = toolCall?.function?.name
   const parameters = toolCall?.function?.arguments || {}
-
-  console.log('Tool:', toolName, 'Params:', parameters)
-
   const client = await getClientByAssistantId(assistantId)
   return runTool(toolName, parameters, client)
 }
@@ -35,15 +23,11 @@ async function handleWhatsAppWebhook(req, res) {
   }
 }
 
-// ----------------------------------------------------------------
-// NEW MVP DASHBOARD ENDPOINTS
-// ----------------------------------------------------------------
-
 // 1. Fetch all student profiles from Supabase safely
 async function getStudents(req, res) {
   try {
-    if (!supabase || typeof supabase.from !== 'function') {
-      console.error('❌ Supabase client export missing from db.js');
+    if (!supabase) {
+      console.error('❌ Supabase instance is completely missing from imports.');
       return res.status(500).json([]);
     }
 
@@ -54,11 +38,9 @@ async function getStudents(req, res) {
 
     if (error) throw error;
     
-    // Always guarantee an array is sent back so frontend .map() doesn't break
     return res.status(200).json(data || []);
   } catch (error) {
     console.error('Error fetching students:', error.message);
-    // Returning an empty list [] instead of an object protects the dashboard frontend from crashing
     return res.status(500).json([]); 
   }
 }
@@ -67,11 +49,7 @@ async function getStudents(req, res) {
 async function updateStudent(req, res) {
   try {
     const { id } = req.params;
-    const updates = req.body; // e.g. { theory_passed: true }
-
-    if (!supabase || typeof supabase.from !== 'function') {
-      return res.status(500).json({ error: 'Supabase client is uninitialized.' });
-    }
+    const updates = req.body; 
 
     const { data, error } = await supabase
       .from('contacts')
@@ -93,11 +71,6 @@ async function broadcastMessage(req, res) {
     const { message } = req.body;
     if (!message) return res.status(400).json({ error: 'Message content is required.' });
 
-    if (!supabase || typeof supabase.from !== 'function') {
-      return res.status(500).json({ error: 'Supabase client is uninitialized.' });
-    }
-
-    // Grab only active students who have valid phone numbers
     const { data: students, error } = await supabase
       .from('contacts')
       .select('phone')
@@ -107,11 +80,9 @@ async function broadcastMessage(req, res) {
 
     console.log(`📣 BROADCAST ENGINE STARTED: Blasting to ${students.length} numbers...`);
 
-    // Loop through records and cleanly space execution to maintain network hygiene
     for (const student of students) {
       if (student.phone) {
         await sendWhatsAppText(student.phone, message);
-        // Half-second buffer between dispatches to keep your API traffic clean
         await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
