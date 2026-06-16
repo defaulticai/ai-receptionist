@@ -21,9 +21,6 @@ const geraldProtector = basicAuth({
 // Serve static assets from public safely behind basic authentication credentials
 app.use('/dashboard', geraldProtector, express.static('public', { index: 'dashboard.html' }));
 
-// Local in-memory storage array for tracking dashboard-only students
-let localDashboardStudents = [];
-
 // Helper function to convert robotic timestamps into a friendly human format
 function formatHumanDateTime(isoString) {
     try {
@@ -80,58 +77,45 @@ app.post('/tool-call', async (req, res) => {
 // Webhook / API Endpoints
 app.post('/webhooks/whatsapp', handleWhatsAppWebhook)
 
-// --- DASHBOARD MEMORY HANDLERS ---
+// --- LIVE SUPABASE DASHBOARD HANDLERS ---
 
-app.get('/api/students', (req, res) => {
-    res.json(localDashboardStudents);
-});
+app.get('/api/students', getStudents);
+app.patch('/api/students/:id', updateStudent);
 
-app.post('/api/students', (req, res) => {
+app.post('/api/students', async (req, res) => {
     try {
+        const { supabase } = require('./db');
         const { name, phone } = req.body;
         
-        const newStudent = {
-            id: 'local_' + Date.now(),
-            name: name,
-            phone: phone,
-            driving_status: 'not_started',
-            theory_passed: false,
-            payment_status: 'Paid',
-            test_date: 'None Assigned'
-        };
+        if (!supabase) throw new Error('Supabase client missing from db module.');
 
-        localDashboardStudents.push(newStudent);
-        console.log(`Successfully added student to local dashboard memory: ${name}`);
-        res.status(201).json(newStudent);
+        const { data, error } = await supabase
+            .from('contacts')
+            .insert([
+                {
+                    name: name,
+                    phone: phone,
+                    driving_status: 'not_started',
+                    theory_passed: false,
+                    payment_status: 'Paid',
+                    test_date: 'None Assigned'
+                }
+            ])
+            .select();
+
+        if (error) throw error;
+        
+        console.log(`Successfully added student to live Supabase contacts table: ${name}`);
+        res.status(201).json(data[0]);
     } catch(err) {
-        console.error('Local memory storage error:', err.message);
+        console.error('Supabase dashboard insert error:', err.message);
         res.status(500).json({ error: err.message });
     }
 });
-
-app.patch('/api/students/:id', (req, res) => {
-    try {
-        const { id } = req.params;
-        const updates = req.body;
-        
-        const index = localDashboardStudents.findIndex(s => s.id === id);
-        if (index !== -1) {
-            localDashboardStudents[index] = { ...localDashboardStudents[index], ...updates };
-            return res.json({ success: true, data: localDashboardStudents[index] });
-        }
-        
-        res.status(404).json({ error: "Student profile index location not found." });
-    } catch(err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// --- LIVE GOOGLE CALENDAR SYNC ENDPOINT ---
 
 // --- LIVE GOOGLE CALENDAR SYNC ENDPOINT ---
 app.get('/api/calendar-events', async (req, res) => {
     try {
-        // Fall back to environment variables or local tokens file if it exists
         let tokens;
         if (fs.existsSync('./tokens.json')) {
             tokens = JSON.parse(fs.readFileSync('./tokens.json', 'utf8'));
@@ -142,7 +126,6 @@ app.get('/api/calendar-events', async (req, res) => {
             };
         }
 
-        // If no credentials found at all, return empty data object safely
         if (!tokens) {
             console.warn("No calendar sync keys found in local filesystem or environment.");
             return res.json({}); 
@@ -154,7 +137,6 @@ app.get('/api/calendar-events', async (req, res) => {
 
         const calendarClient = google.calendar({ version: 'v3', auth: oauth2Client });
         
-        // Fetch up to 30 days ago to confidently populate the full current month grid view
         const response = await calendarClient.events.list({
             calendarId: 'primary',
             timeMin: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), 
