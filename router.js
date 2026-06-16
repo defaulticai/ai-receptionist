@@ -15,33 +15,37 @@ async function routeToolCall(body) {
 async function handleWhatsAppWebhook(req, res) {
   try {
     console.log('Incoming WhatsApp Webhook Data:', JSON.stringify(req.body));
+    
+    // Extract metadata safely from the WhatsApp webhook structure
+    const entry = req.body?.entry?.[0];
+    const change = entry?.changes?.[0];
+    const messageData = change?.value?.messages?.[0];
+
+    if (messageData) {
+      const fromNumber = messageData.from; // e.g., "447824012556"
+      const messageText = messageData.text?.body || messageData.button?.text || '';
+
+      if (messageText && fromNumber) {
+        // Log the student's incoming message straight to Supabase
+        await supabase
+          .from('message_logs')
+          .insert([
+            {
+              phone_number: fromNumber,
+              message_body: messageText,
+              sender: 'student'
+            }
+          ]);
+        console.log(`💾 Logged incoming text from ${fromNumber} to message_logs`);
+      }
+    }
+
+    // Hand over to the existing AI logic
     await handleIncomingWhatsApp(req.body); 
     return res.status(200).send({ status: 'success' });
   } catch (error) {
     console.error('Error in WhatsApp webhook endpoint:', error);
     return res.status(500).send({ error: 'Internal Server Error' });
-  }
-}
-
-// 1. Fetch all student profiles from Supabase safely
-async function getStudents(req, res) {
-  try {
-    if (!supabase) {
-      console.error('❌ Supabase instance is completely missing from imports.');
-      return res.status(500).json([]);
-    }
-
-    const { data, error } = await supabase
-      .from('contacts')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    
-    return res.status(200).json(data || []);
-  } catch (error) {
-    console.error('Error fetching students:', error.message);
-    return res.status(500).json([]); 
   }
 }
 
