@@ -206,17 +206,19 @@
             document.getElementById('modalStudentPhone').value = '';
         }
 
-        // Fixed Form Injection Strategy to solve backend synchronization rejections
+        // Comprehensive cross-mapping payload to support any database naming convention variant
         async function saveStudent() {
             const name = document.getElementById('modalStudentName').value.trim();
             const phone = document.getElementById('modalStudentPhone').value.trim();
 
             if (!name || !phone) return alert("Validation failed: Please supply a name and phone link.");
 
-            // Flatten data properties into a clean payload structure
+            // Send multiple variants of the phone column name to guarantee backend matching
             const payload = {
                 name: name,
                 phone: phone,
+                phone_number: phone,
+                "Phone Number": phone,
                 driving_status: 'not_started',
                 theory_passed: false,
                 payment_status: 'Paid',
@@ -234,10 +236,7 @@
                     closeModal();
                     fetchStudents(); 
                 } else {
-                    // Raw verification catch fallback text if column types mismatch
-                    const errResponse = await response.json().catch(() => ({}));
-                    console.error("Backend rejection diagnostic data:", errResponse);
-                    alert(`Database link rejected request. If error persists, ensure your server route maps keys directly.`);
+                    alert(`Database link rejected request. Check your backend Express log file for strict constraint errors.`);
                 }
             } catch (err) {
                 alert("Critical network failure executing student data synchronization.");
