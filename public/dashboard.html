@@ -10,6 +10,20 @@
       (function (C, A, L) { let p = function (a, ar) { a.q.push(ar); }; let d = C.document; C.Cal = C.Cal || function () { let cal = C.Cal; let ar = arguments; if (!cal.loaded) { cal.ns = {}; cal.q = cal.q || []; d.head.appendChild(d.createElement("script")).src = A; cal.loaded = true; } if (ar[0] === L) { const api = cal.ns[namespace] = api) && p(api, ar) : p(cal, ar); return; } p(cal, ar); }; })(window, "https://app.cal.com/embed/embed.js", "init");
       Cal("init", {origin:"https://cal.com"});
     </script>
+
+    <style>
+        /* Force the Cal.com embed container to maintain structural visibility and not collapse to 0px */
+        #cal-inline-embed {
+            min-height: 700px !important;
+            height: 100% !important;
+            width: 100% !important;
+            display: block !important;
+        }
+        /* Ensure the parent grid column block balances layout height scale changes */
+        .lg\:col-span-7 {
+            min-height: 750px;
+        }
+    </style>
 </head>
 <body class="bg-slate-900 text-slate-100 font-sans min-h-screen p-4 md:p-8">
 
@@ -87,7 +101,7 @@
                     <p class="text-xs text-slate-400 mt-1">Live visibility synced with your Google Calendar scheduling slots.</p>
                 </div>
                 
-                <div id="cal-inline-embed" class="w-full flex-1 min-h-[600px] rounded-xl overflow-hidden border border-slate-700 bg-slate-900/40"></div>
+                <div id="cal-inline-embed" class="w-full flex-1 rounded-xl overflow-hidden border border-slate-700 bg-slate-900/40"></div>
             </div>
         </div>
 
@@ -101,11 +115,11 @@
             initializeCalEmbed();
         });
 
-        // 3. Configure Cal.com rendering target properties
+        // Configure Cal.com rendering target properties with live user link
         function initializeCalEmbed() {
             Cal("inline", {
                 elementOrSelector: "#cal-inline-embed",
-                calLink: "https://cal.com/defaultic-ai-cwhqnr/initial-assessment", // <--- REPLACE THIS WITH YOUR CAL.COM USERNAME/SLUG
+                calLink: "defaultic-ai-cwhqnr/initial-assessment",
                 layout: "month_view"
             });
 
