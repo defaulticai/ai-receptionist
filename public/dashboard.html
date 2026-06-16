@@ -90,57 +90,61 @@
         }
 
         function renderStudents(studentsList) {
-            const tbody = document.getElementById('studentTableBody');
-            if (!Array.isArray(studentsList) || studentsList.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-slate-500">No students found inside Supabase table.</td></tr>`;
-                return;
-            }
+    const tbody = document.getElementById('studentTableBody');
+    if (!Array.isArray(studentsList) || studentsList.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-slate-500">No students found inside Supabase table.</td></tr>`;
+        return;
+    }
 
-            tbody.innerHTML = studentsList.map(student => {
-                // Safeguards to prevent null values from crashing the render engine
-                const studentId = student.id;
-                const theoryChecked = student.theory_passed === true || student.theory_passed === 'true';
-                const drivingStatus = student.driving_status || 'not_started';
-                const paymentStatus = student.payment_status || 'Paid';
-
-                return `
-                <tr class="hover:bg-slate-800/20 transition-colors">
-                    <td class="py-4">
-                        <div class="font-semibold text-white">${student.name || 'Anonymous Student'}</div>
-                        <div class="text-slate-400 text-xs mt-0.5">${student.phone ? '+' + student.phone : 'No Phone'}</div>
-                    </td>
-                    <td class="py-4">
-                        <select 
-                            onchange="updateToggle('${studentId}', 'driving_status', this.value)"
-                            class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none cursor-pointer capitalize"
-                        >
-                            <option value="not_started" ${drivingStatus === 'not_started' ? 'selected' : ''}>Not Started</option>
-                            <option value="learning" ${drivingStatus === 'learning' ? 'selected' : ''}>Learning</option>
-                            <option value="passed" ${drivingStatus === 'passed' ? 'selected' : ''}>Passed</option>
-                        </select>
-                    </td>
-                    <td class="py-4 text-center">
-                        <input 
-                            type="checkbox" 
-                            ${theoryChecked ? 'checked' : ''} 
-                            onchange="updateToggle('${studentId}', 'theory_passed', this.checked)"
-                            class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-blue-600 focus:ring-0 cursor-pointer"
-                        />
-                    </td>
-                    <td class="py-4 text-right">
-                        <select 
-                            onchange="updateToggle('${studentId}', 'payment_status', this.value)"
-                            class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none cursor-pointer"
-                        >
-                            <option value="Paid" ${paymentStatus === 'Paid' ? 'selected' : ''}>Paid</option>
-                            <option value="Balance Owed" ${paymentStatus === 'Balance Owed' ? 'selected' : ''}>Owed</option>
-                        </select>
-                    </td>
-                </tr>
-                `;
-            }).join('');
+    tbody.innerHTML = studentsList.map(student => {
+        const studentId = student.id;
+        const theoryChecked = student.theory_passed === true || student.theory_passed === 'true';
+        const drivingStatus = student.driving_status || 'not_started';
+        const paymentStatus = student.payment_status || 'Paid';
+        
+        // Cleanly handle phone formatting. If it starts with 0, we show it perfectly as-is.
+        let displayPhone = 'No Phone';
+        if (student.phone) {
+            displayPhone = student.phone.toString().trim();
         }
 
+        return `
+        <tr class="hover:bg-slate-800/20 transition-colors">
+            <td class="py-4">
+                <div class="font-semibold text-white">${student.name || 'Anonymous Student'}</div>
+                <div class="text-slate-400 text-xs mt-0.5">${displayPhone}</div>
+            </td>
+            <td class="py-4">
+                <select 
+                    onchange="updateToggle('${studentId}', 'driving_status', this.value)"
+                    class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none cursor-pointer capitalize"
+                >
+                    <option value="not_started" ${drivingStatus === 'not_started' ? 'selected' : ''}>Not Started</option>
+                    <option value="learning" ${drivingStatus === 'learning' ? 'selected' : ''}>Learning</option>
+                    <option value="passed" ${drivingStatus === 'passed' ? 'selected' : ''}>Passed</option>
+                </select>
+            </td>
+            <td class="py-4 text-center">
+                <input 
+                    type="checkbox" 
+                    ${theoryChecked ? 'checked' : ''} 
+                    onchange="updateToggle('${studentId}', 'theory_passed', this.checked)"
+                    class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-blue-600 focus:ring-0 cursor-pointer"
+                />
+            </td>
+            <td class="py-4 text-right">
+                <select 
+                    onchange="updateToggle('${studentId}', 'payment_status', this.value)"
+                    class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none cursor-pointer"
+                >
+                    <option value="Paid" ${paymentStatus === 'Paid' ? 'selected' : ''}>Paid</option>
+                    <option value="Balance Owed" ${paymentStatus === 'Balance Owed' ? 'selected' : ''}>Owed</option>
+                </select>
+            </td>
+        </tr>
+        `;
+    }).join('');
+}
         async function updateToggle(id, field, value) {
             try {
                 const res = await fetch(`/api/students/${id}`, {
